@@ -1,3 +1,13 @@
 .DS_Store
 node_modules/
 *.env
+.env
+*.key
+
+# ── Tài liệu khoá học: KHÔNG commit (quy định bảo mật data pack) ──
+# Slide nạp lúc chạy từ máy cá nhân, không nằm trong repo.
+*.pdf
+!tham-khao/*.pdf
+pages.json
+**/pages.json
+session-log-*.json
