@@ -1,0 +1,12 @@
+sherpa-onnx
+faster-whisper
+soundfile
+numpy
+scipy
+noisereduce
+torch
+torchaudio
+omnivoice
+fastapi
+uvicorn
+python-multipart
