@@ -1,5 +1,14 @@
 # Mini Hackathon AI — Batch 03
 
+**Đội thi:** Anh trai c2 (Zone Z5)
+**Danh sách thành viên & Phân công (Cập nhật lại tên thật và mã HV trước CP5):**
+- Role 1 (Mã HV: ____) — Product Owner & Spec Keeper
+- Role 2 (Mã HV: ____) — Data & Evidence
+- Role 3 (Mã HV: ____) — AI/Prompt Engineer
+- Role 4 (Mã HV: ____) — QA & Golden Set
+- Role 5 (Mã HV: ____) — UI/UX Builder
+- Role 6 (Mã HV: ____) — Demo & Validation
+
 **SPEC → Prototype → Demo.** Đây không phải cuộc thi code — đây là cuộc thi **tư duy sản phẩm AI**.
 
 - Thời lượng: **1,5 ngày** (một ngày build + một buổi demo)
