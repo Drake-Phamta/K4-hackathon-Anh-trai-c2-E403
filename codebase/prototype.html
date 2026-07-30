@@ -1,312 +1,275 @@
 <meta charset="utf-8">
-<title>VLearn Slide Tutor — Prototype GĐ1</title>
+<title>VLearn Slide Tutor — Console</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-/* ══════════════════════════════════════════════════════════════
-   1. TOKENS
-   ══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════
+   CONSOLE — bảng điều khiển. Dày đặc, ưu tiên dữ liệu, phơi bày cơ chế.
+   Palette: slate lệch xanh (không phải grey trung tính vô cảm)
+   Type: system sans cho chữ, mono cho số/mã — mono là ngôn ngữ của bảng đo
+   ══════════════════════════════════════════════════════════════════════ */
 :root{
-  --bg:#0f1115; --bg-2:#161920; --bg-3:#1d212a; --line:#272c38;
-  --fg:#e6e8ee; --fg-dim:#9aa3b2; --fg-faint:#6b7382;
-  --accent:#4f8cff; --accent-dim:#2d4f8f;
-  --ok:#3fbf7f; --warn:#e0a83a; --danger:#e5616b;
-  --radius:10px;
-  --mono:ui-monospace,"Cascadia Code",Consolas,monospace;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme: light dark;
+  --bg:#eef1f6; --panel:#ffffff; --sunk:#f4f6fa; --line:#dde3ec;
+  --fg:#141922; --dim:#5b6577; --faint:#8b95a7;
+  --accent:#2563d8; --accent-soft:#e5edfd;
+  --ok:#0f7a52; --ok-soft:#e2f4ec;
+  --warn:#8a5a06; --warn-soft:#fdf0d8;
+  --bad:#b3312f; --bad-soft:#fdeae9;
+  --pv-paper:#fff; --pv-shadow:0 1px 3px rgba(20,25,34,.14),0 6px 22px rgba(20,25,34,.09);
+  --pv-num:#8b95a7; --pv-numbg:rgba(255,255,255,.9);
+  --pv-sel:rgba(37,99,216,.26); --pv-hit:rgba(217,152,32,.42); --pv-hit-strong:rgba(217,152,32,.8);
+  --pv-radius:3px;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",monospace;
+  --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
 }
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1017; --panel:#151a23; --sunk:#10141c; --line:#242c3a;
+    --fg:#e3e8f0; --dim:#98a3b6; --faint:#69748a;
+    --accent:#5b95ff; --accent-soft:#182742;
+    --ok:#48c48c; --ok-soft:#0f2b20;
+    --warn:#e0a83a; --warn-soft:#33270e;
+    --bad:#f0736f; --bad-soft:#341a1b;
+    --pv-paper:#fff; --pv-shadow:0 2px 18px rgba(0,0,0,.55);
+    --pv-numbg:rgba(255,255,255,.85);
+    --pv-sel:rgba(91,149,255,.4);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#eef1f6; --panel:#fff; --sunk:#f4f6fa; --line:#dde3ec;
+  --fg:#141922; --dim:#5b6577; --faint:#8b95a7;
+  --accent:#2563d8; --accent-soft:#e5edfd;
+  --ok:#0f7a52; --ok-soft:#e2f4ec; --warn:#8a5a06; --warn-soft:#fdf0d8;
+  --bad:#b3312f; --bad-soft:#fdeae9;
+  --pv-shadow:0 1px 3px rgba(20,25,34,.14),0 6px 22px rgba(20,25,34,.09);
+  --pv-numbg:rgba(255,255,255,.9); --pv-sel:rgba(37,99,216,.26);
+}
+:root[data-theme="dark"]{
+  --bg:#0d1017; --panel:#151a23; --sunk:#10141c; --line:#242c3a;
+  --fg:#e3e8f0; --dim:#98a3b6; --faint:#69748a;
+  --accent:#5b95ff; --accent-soft:#182742;
+  --ok:#48c48c; --ok-soft:#0f2b20; --warn:#e0a83a; --warn-soft:#33270e;
+  --bad:#f0736f; --bad-soft:#341a1b;
+  --pv-shadow:0 2px 18px rgba(0,0,0,.55);
+  --pv-numbg:rgba(255,255,255,.85); --pv-sel:rgba(91,149,255,.4);
+}
+
 *{box-sizing:border-box}
 html,body{height:100%}
-body{
-  margin:0; font-family:var(--sans); background:var(--bg); color:var(--fg);
-  font-size:14px; line-height:1.55; overflow:hidden;
-}
-button{font-family:inherit; font-size:inherit; cursor:pointer}
-:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--fg);
+  font-size:14px;line-height:1.55;overflow:hidden}
+button,input,textarea{font-family:inherit;font-size:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
+  padding:1px 5px;border-radius:4px}
 
-/* ══════════════════════════════════════════════════════════════
-   2. SHELL
-   ══════════════════════════════════════════════════════════════ */
-#app{display:flex; flex-direction:column; height:100vh}
-#topbar{
-  display:flex; align-items:center; gap:12px; padding:8px 14px;
-  background:var(--bg-2); border-bottom:1px solid var(--line); flex:0 0 auto;
-}
-#topbar .brand{font-weight:650; letter-spacing:-.01em; white-space:nowrap}
-#topbar .brand small{color:var(--fg-faint); font-weight:400; margin-left:6px}
-#topbar .spacer{flex:1}
+#app{display:flex;flex-direction:column;height:100vh}
+#bar{display:flex;align-items:center;gap:10px;padding:7px 12px;background:var(--panel);
+  border-bottom:1px solid var(--line);flex:0 0 auto}
+.brand{font-weight:640;letter-spacing:-.012em;white-space:nowrap;display:flex;
+  align-items:baseline;gap:7px}
+.brand em{font-style:normal;font-size:11px;font-weight:500;color:var(--faint);
+  font-family:var(--mono)}
+.sp{flex:1}
+.btn{background:var(--sunk);color:var(--fg);border:1px solid var(--line);
+  padding:5px 10px;border-radius:6px;transition:background .12s,border-color .12s;white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--accent-soft);border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:560}
+.btn.pri:hover:not(:disabled){filter:brightness(1.1)}
+.btn.sm{padding:3px 7px;font-size:12px}
+.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#pg{display:flex;align-items:center;gap:5px;color:var(--dim);font-family:var(--mono);font-size:12px}
+#pgIn{width:44px;text-align:center;background:var(--sunk);color:var(--fg);
+  border:1px solid var(--line);border-radius:5px;padding:3px;font-family:var(--mono)}
 
-.btn{
-  background:var(--bg-3); color:var(--fg); border:1px solid var(--line);
-  padding:6px 11px; border-radius:8px; transition:.12s; white-space:nowrap;
-}
-.btn:hover:not(:disabled){background:#252a35; border-color:#3a4152}
-.btn:disabled{opacity:.4; cursor:not-allowed}
-.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff; font-weight:550}
-.btn.primary:hover:not(:disabled){background:#5f98ff}
-.btn.sm{padding:3px 8px; font-size:12px; border-radius:6px}
+#main{display:flex;flex:1;min-height:0}
+.pv-scroll{flex:1 1 62%;min-width:0;overflow-y:auto;overflow-x:auto;
+  background:var(--bg);padding:20px 0 40px;position:relative;scroll-behavior:smooth}
+#empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:13px;text-align:center;color:var(--dim);padding:28px}
+#empty h2{color:var(--fg);margin:0;font-size:18px;font-weight:620}
+#empty p{max-width:420px;font-size:13px;line-height:1.7;margin:0}
+.pv-scroll.drag #empty{background:var(--accent-soft);outline:2px dashed var(--accent);outline-offset:-14px}
 
-#pagenav{display:flex; align-items:center; gap:6px; color:var(--fg-dim)}
-#pageInput{
-  width:48px; text-align:center; background:var(--bg); color:var(--fg);
-  border:1px solid var(--line); border-radius:6px; padding:4px; font-family:var(--mono);
-}
-#main{display:flex; flex:1; min-height:0}
+#pop{position:fixed;z-index:60;display:none;background:var(--panel);
+  border:1px solid var(--accent);border-radius:7px;padding:4px;
+  box-shadow:0 6px 22px rgba(0,0,0,.28)}
+#pop.on{display:flex;gap:4px}
 
-/* ══════════════════════════════════════════════════════════════
-   3. PANE TRÁI — PDF
-   ══════════════════════════════════════════════════════════════ */
-#pdfPane{
-  flex:1 1 62%; min-width:0; overflow:auto; position:relative;
-  background:#0b0d11; display:flex; justify-content:center; padding:20px;
-}
-#pageWrap{
-  position:relative; align-self:flex-start;
-  box-shadow:0 6px 30px rgba(0,0,0,.55); background:#fff;
-  /* pdf.js đọc các biến này khi dựng text layer */
-  --scale-round-x:1px; --scale-round-y:1px;
-}
-#pageCanvas{display:block}
+/* ── panel phải ─────────────────────────────────────────────────────── */
+#side{flex:0 0 39%;min-width:370px;max-width:580px;border-left:1px solid var(--line);
+  background:var(--panel);display:flex;flex-direction:column}
+#sideHd{padding:9px 13px;border-bottom:1px solid var(--line);display:flex;
+  align-items:center;gap:9px}
+#sideHd .t{font-weight:600;font-size:13px}
+#sideHd .s{color:var(--faint);font-size:11px;font-family:var(--mono)}
 
-/* Text layer — CSS lấy từ pdfjs-dist 5.7.284 web/pdf_viewer.css.
-   Không có khối này thì BÔI ĐEN KHÔNG HOẠT ĐỘNG. */
-.textLayer{
-  position:absolute; text-align:initial; inset:0; overflow:clip; opacity:1;
-  line-height:1; -webkit-text-size-adjust:none; text-size-adjust:none;
-  forced-color-adjust:none; transform-origin:0 0; caret-color:CanvasText; z-index:2;
-  --min-font-size:1;
-  --text-scale-factor:calc(var(--total-scale-factor) * var(--min-font-size));
-  --min-font-size-inv:calc(1 / var(--min-font-size));
-}
-.textLayer :is(span,br){
-  color:transparent; position:absolute; white-space:pre; cursor:text; transform-origin:0% 0%;
-}
-.textLayer > :not(.markedContent),
-.textLayer .markedContent span:not(.markedContent){
-  z-index:1; --font-height:0; --scale-x:1; --rotate:0deg;
-  font-size:calc(var(--text-scale-factor) * var(--font-height));
-  transform:rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
-}
-.textLayer .markedContent{display:contents}
-.textLayer .endOfContent{
-  display:block; position:absolute; inset:100% 0 0; z-index:-1; cursor:default; user-select:none;
-}
-.textLayer ::selection{background:rgba(79,140,255,.42)}
-.textLayer span.cite-hit{
-  background:rgba(224,168,58,.42); border-radius:2px; animation:citePulse 1.6s ease-out;
-}
-@keyframes citePulse{
-  0%,20%{background:rgba(224,168,58,.85)}
-  100%{background:rgba(224,168,58,.42)}
-}
+/* thanh trạng thái giọng nói */
+#vbar{display:flex;align-items:center;gap:9px;padding:8px 13px;
+  border-bottom:1px solid var(--line);background:var(--sunk);font-size:12px}
+#vbar.hide{display:none}
+#orb{width:26px;height:26px;border-radius:50%;flex:0 0 auto;position:relative;
+  background:var(--line);display:grid;place-items:center;transition:background .2s}
+#orb::after{content:"";position:absolute;inset:0;border-radius:50%;
+  border:2px solid var(--accent);opacity:0;transform:scale(1)}
+#orb.live{background:var(--accent)}
+#orb.live::after{opacity:.5;animation:ping 1.4s ease-out infinite}
+#orb.speak{background:var(--ok)}
+@keyframes ping{to{transform:scale(2.1);opacity:0}}
+#vlevel{flex:1;height:4px;background:var(--line);border-radius:3px;overflow:hidden}
+#vlevel i{display:block;height:100%;width:0;background:var(--accent);
+  border-radius:3px;transition:width .07s linear}
+#vtext{color:var(--dim);font-style:italic;flex:1;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+#veng{font-family:var(--mono);font-size:10.5px;color:var(--faint);
+  border:1px solid var(--line);padding:1px 6px;border-radius:20px}
 
-#selPopup{
-  position:absolute; z-index:40; display:none;
-  background:var(--bg-3); border:1px solid #3a4152; border-radius:9px;
-  padding:5px; box-shadow:0 8px 26px rgba(0,0,0,.6); gap:4px;
-}
-#selPopup.on{display:flex}
+#log{flex:1;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:13px}
+.note{background:var(--sunk);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:8px;padding:9px 11px;font-size:12.5px;color:var(--dim)}
+.note b{color:var(--fg)}
 
-#empty{
-  position:absolute; inset:0; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:14px; text-align:center;
-  color:var(--fg-dim); padding:30px; transition:.15s;
-}
-#empty h2{color:var(--fg); margin:0; font-size:19px}
-#empty .hint{max-width:440px; font-size:13px; line-height:1.7}
-#empty code{
-  font-family:var(--mono); font-size:12px; background:var(--bg-3);
-  padding:1px 6px; border-radius:5px; color:var(--fg);
-}
-#pdfPane.dragover #empty{
-  background:rgba(79,140,255,.09); outline:2px dashed var(--accent); outline-offset:-14px;
-}
+.msg{display:flex;flex-direction:column;gap:6px}
+.msg.u{align-items:flex-end}
+.bub{max-width:96%;padding:8px 11px;border-radius:9px;white-space:pre-wrap;
+  word-wrap:break-word;overflow-wrap:anywhere}
+.msg.u .bub{background:var(--accent);color:#fff;border-bottom-right-radius:3px}
+.msg.a .bub{background:var(--sunk);border:1px solid var(--line);max-width:100%}
+.att{font-size:11px;color:var(--faint);font-family:var(--mono);display:flex;
+  gap:5px;max-width:96%;align-items:baseline}
+.att i{font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:230px}
 
-/* ══════════════════════════════════════════════════════════════
-   4. PANE PHẢI — CHAT
-   ══════════════════════════════════════════════════════════════ */
-#chatPane{
-  flex:0 0 38%; min-width:360px; max-width:560px;
-  border-left:1px solid var(--line); background:var(--bg-2);
-  display:flex; flex-direction:column;
-}
-#chatHead{padding:10px 14px; border-bottom:1px solid var(--line)}
-#chatHead .t{font-weight:600}
-#chatHead .sub{color:var(--fg-faint); font-size:12px}
-#log{flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:14px}
+/* trace — cơ chế phơi ra, không giấu */
+.tr{border:1px solid var(--line);border-radius:7px;background:var(--sunk);overflow:hidden}
+.tr summary{padding:5px 9px;cursor:pointer;color:var(--dim);font-size:11.5px;
+  display:flex;align-items:center;gap:6px;list-style:none;font-family:var(--mono)}
+.tr summary::-webkit-details-marker{display:none}
+.tr summary::before{content:"▸";transition:transform .15s;display:inline-block}
+.tr[open] summary::before{transform:rotate(90deg)}
+.tr ol{margin:0;padding:1px 9px 7px 26px;color:var(--dim)}
+.tr li{padding:1.5px 0;font-family:var(--mono);font-size:11px}
+.tr li b{color:var(--fg);font-weight:600}
+.tr .ms{color:var(--faint)}
 
-/* G1 — nói rõ phạm vi ngay câu đầu tiên user thấy */
-.sysnote{
-  background:var(--bg-3); border:1px solid var(--line); border-left:3px solid var(--accent);
-  border-radius:var(--radius); padding:10px 12px; font-size:13px; color:var(--fg-dim);
-}
-.sysnote b{color:var(--fg)}
+.bd{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.badge{font-size:10.5px;padding:2px 8px;border-radius:20px;font-weight:600;
+  border:1px solid;font-family:var(--mono)}
+.badge.ok{color:var(--ok);border-color:var(--ok);background:var(--ok-soft)}
+.badge.warn{color:var(--warn);border-color:var(--warn);background:var(--warn-soft)}
+.badge.bad{color:var(--bad);border-color:var(--bad);background:var(--bad-soft)}
+.badge.mute{color:var(--dim);border-color:var(--line);background:var(--sunk)}
+.badge.cf{color:var(--dim);border-color:var(--line);background:transparent;
+  font-variant-numeric:tabular-nums}
 
-.msg{display:flex; flex-direction:column; gap:7px}
-.msg.user{align-items:flex-end}
-.bubble{max-width:94%; padding:9px 12px; border-radius:var(--radius); white-space:pre-wrap; word-wrap:break-word}
-.msg.user .bubble{background:var(--accent-dim); border:1px solid #3a63b0}
-.msg.ai .bubble{background:var(--bg-3); border:1px solid var(--line); max-width:100%}
+.cts{display:flex;gap:5px;flex-wrap:wrap}
+.ct{font-size:11px;padding:3px 8px;border-radius:6px;font-family:var(--mono);
+  background:var(--accent-soft);border:1px solid transparent;color:var(--accent);
+  text-align:left;transition:border-color .12s}
+.ct:hover{border-color:var(--accent)}
+.ct q{color:var(--faint);font-family:var(--sans);font-style:italic;quotes:'"' '"'}
 
-/* chip nguồn đính kèm — cho user thấy AI nhận được ĐÚNG cái gì */
-.attach{font-size:11.5px; color:var(--fg-faint); font-family:var(--mono); display:flex; gap:5px; max-width:94%}
-.attach .q{
-  color:var(--fg-dim); font-style:italic; overflow:hidden;
-  text-overflow:ellipsis; white-space:nowrap; max-width:260px;
-}
+.acts{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.acts .sp{flex:1}
+.ib{background:transparent;border:1px solid var(--line);color:var(--dim);
+  width:26px;height:24px;border-radius:5px;display:grid;place-items:center;transition:.12s}
+.ib:hover{background:var(--sunk);color:var(--fg)}
+.ib.up{color:var(--ok);border-color:var(--ok);background:var(--ok-soft)}
+.ib.dn{color:var(--bad);border-color:var(--bad);background:var(--bad-soft)}
+.fus{display:flex;gap:5px;flex-wrap:wrap}
+.fu{font-size:11.5px;padding:3px 9px;border-radius:13px;background:transparent;
+  border:1px dashed var(--line);color:var(--dim);transition:.12s}
+.fu:hover{border-style:solid;border-color:var(--accent);color:var(--accent)}
+.why{display:flex;gap:5px}
+.why input{flex:1;background:var(--sunk);border:1px solid var(--line);border-radius:6px;
+  padding:4px 8px;color:var(--fg);font-size:12px}
+.msg.fold .bub,.msg.fold .cts,.msg.fold .fus,.msg.fold .tr{display:none}
 
-/* trace strip — BƯỚC 2 CỦA WORKFLOW, cố tình hiện ra */
-.trace{border:1px solid var(--line); border-radius:8px; background:#12151c; font-size:12px; overflow:hidden}
-.trace summary{
-  padding:6px 10px; cursor:pointer; color:var(--fg-dim);
-  display:flex; align-items:center; gap:7px; list-style:none;
-}
-.trace summary::-webkit-details-marker{display:none}
-.trace summary::before{content:"▸"; color:var(--fg-faint); transition:.15s}
-.trace[open] summary::before{transform:rotate(90deg)}
-.trace summary:hover{background:#171b23}
-.trace ol{margin:0; padding:2px 10px 8px 30px; color:var(--fg-dim)}
-.trace li{padding:2px 0; font-family:var(--mono); font-size:11.5px}
-.trace li b{color:var(--fg); font-weight:550}
-.trace .ms{color:var(--fg-faint)}
-
-/* badge quyết định + độ tin cậy — G2 */
-.badges{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
-.badge{font-size:11px; padding:2px 8px; border-radius:20px; font-weight:550; border:1px solid}
-.badge.answer{color:var(--ok); border-color:rgba(63,191,127,.4); background:rgba(63,191,127,.1)}
-.badge.clarify{color:var(--warn); border-color:rgba(224,168,58,.4); background:rgba(224,168,58,.1)}
-.badge.no_grounding{color:var(--danger); border-color:rgba(229,97,107,.4); background:rgba(229,97,107,.1)}
-.badge.out_of_scope{color:var(--fg-dim); border-color:var(--line); background:var(--bg-3)}
-.badge.conf{color:var(--fg-dim); border-color:var(--line); background:transparent; font-family:var(--mono)}
-
-/* citation chip — G11, bấm được */
-.cites{display:flex; gap:6px; flex-wrap:wrap}
-.cite{
-  font-size:11.5px; padding:3px 9px; border-radius:7px; font-family:var(--mono);
-  background:rgba(79,140,255,.12); border:1px solid rgba(79,140,255,.35);
-  color:#a9c6ff; transition:.12s; text-align:left;
-}
-.cite:hover{background:rgba(79,140,255,.26); border-color:var(--accent)}
-.cite .qt{color:var(--fg-faint); font-family:var(--sans); font-style:italic}
-
-/* G8 gạt bỏ · G9 sửa · G15 feedback */
-.acts{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
-.acts .sep{flex:1}
-.iconbtn{
-  background:transparent; border:1px solid var(--line); color:var(--fg-dim);
-  width:27px; height:25px; border-radius:6px; display:grid; place-items:center; transition:.12s;
-}
-.iconbtn:hover{background:var(--bg-3); color:var(--fg)}
-.iconbtn.on-up{color:var(--ok); border-color:rgba(63,191,127,.5); background:rgba(63,191,127,.12)}
-.iconbtn.on-down{color:var(--danger); border-color:rgba(229,97,107,.5); background:rgba(229,97,107,.12)}
-
-.followups{display:flex; gap:6px; flex-wrap:wrap}
-.fu{
-  font-size:12px; padding:4px 10px; border-radius:14px;
-  background:transparent; border:1px dashed #3a4152; color:var(--fg-dim); transition:.12s;
-}
-.fu:hover{border-style:solid; border-color:var(--accent); color:var(--fg)}
-
-.whybad{display:flex; gap:6px}
-.whybad input{
-  flex:1; background:var(--bg); border:1px solid var(--line); border-radius:7px;
-  padding:5px 9px; color:var(--fg); font-family:inherit; font-size:12.5px;
-}
-.msg.collapsed .bubble,.msg.collapsed .cites,
-.msg.collapsed .followups,.msg.collapsed .trace{display:none}
-
-#composer{border-top:1px solid var(--line); padding:10px 12px; display:flex; flex-direction:column; gap:8px}
-#selBar{
-  display:none; font-size:12px; background:rgba(79,140,255,.1);
-  border:1px solid rgba(79,140,255,.3); border-radius:8px; padding:6px 9px;
-  align-items:center; gap:8px;
-}
-#selBar.on{display:flex}
-#selBar .txt{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#a9c6ff; font-style:italic}
-#inputRow{display:flex; gap:8px; align-items:flex-end}
-#qInput{
-  flex:1; resize:none; background:var(--bg); color:var(--fg); font-family:inherit;
-  font-size:13.5px; border:1px solid var(--line); border-radius:9px;
-  padding:9px 11px; min-height:40px; max-height:130px; line-height:1.5;
-}
-#qInput:focus{outline:none; border-color:var(--accent)}
-#scen{display:flex; gap:5px; flex-wrap:wrap; font-size:11px; align-items:center}
-#scen .lbl{color:var(--fg-faint)}
+#comp{border-top:1px solid var(--line);padding:9px 11px;display:flex;
+  flex-direction:column;gap:7px}
+#sel{display:none;font-size:11.5px;background:var(--accent-soft);
+  border:1px solid var(--accent);border-radius:7px;padding:5px 8px;align-items:center;gap:7px}
+#sel.on{display:flex}
+#sel .x{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--accent);font-style:italic}
+#row{display:flex;gap:7px;align-items:flex-end}
+#q{flex:1;resize:none;background:var(--sunk);color:var(--fg);border:1px solid var(--line);
+  border-radius:8px;padding:8px 10px;min-height:38px;max-height:130px;font-size:13.5px;line-height:1.5}
+#q:focus{outline:none;border-color:var(--accent);background:var(--panel)}
+#scen{display:flex;gap:4px;flex-wrap:wrap;font-size:10.5px;align-items:center}
 #scen.hide{display:none}
-
-.spin{
-  width:12px; height:12px; border:2px solid var(--line); border-top-color:var(--accent);
-  border-radius:50%; animation:sp .7s linear infinite; display:inline-block;
-}
+#scen .l{color:var(--faint);font-family:var(--mono)}
+.spin{width:11px;height:11px;border:2px solid var(--line);border-top-color:var(--accent);
+  border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
-
-#toast{
-  position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(60px);
-  background:var(--bg-3); border:1px solid #3a4152; color:var(--fg);
-  padding:9px 15px; border-radius:9px; font-size:13px; z-index:90;
-  opacity:0; transition:.22s; pointer-events:none; box-shadow:0 8px 26px rgba(0,0,0,.5);
-}
-#toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:7px;font-size:12.5px;
+  z-index:90;opacity:0;transition:.2s;pointer-events:none}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  .pv-scroll{scroll-behavior:auto}}
 </style>
 
 <div id="app">
-  <div id="topbar">
-    <div class="brand">VLearn Slide Tutor <small>prototype GĐ1 · AI mock</small></div>
-    <button class="btn" id="btnOpen">📂 Mở PDF</button>
-    <div id="pagenav">
-      <button class="btn sm" id="btnPrev" disabled>◀</button>
-      <input id="pageInput" value="–" disabled>
-      <span id="pageTotal" style="font-family:var(--mono)">/ –</span>
-      <button class="btn sm" id="btnNext" disabled>▶</button>
+  <div id="bar">
+    <div class="brand">VLearn Slide Tutor <em>console · mock</em></div>
+    <button class="btn sm" id="open">Mở PDF</button>
+    <div id="pg">
+      <button class="btn sm" id="prev" disabled>◀</button>
+      <input id="pgIn" value="–" disabled><span id="pgTot">/ –</span>
+      <button class="btn sm" id="next" disabled>▶</button>
     </div>
-    <button class="btn sm" id="btnZoomOut" disabled>−</button>
-    <span id="zoomLbl" style="font-family:var(--mono); color:var(--fg-dim); min-width:42px; text-align:center">100%</span>
-    <button class="btn sm" id="btnZoomIn" disabled>+</button>
-    <div class="spacer"></div>
-    <button class="btn sm" id="btnLog">⬇ Xuất log</button>
+    <button class="btn sm" id="zo" disabled>−</button>
+    <span id="zl" style="font-family:var(--mono);color:var(--dim);min-width:38px;text-align:center;font-size:12px">—</span>
+    <button class="btn sm" id="zi" disabled>+</button>
+    <div class="sp"></div>
+    <button class="btn sm" id="mic" disabled>🎙 Trò chuyện</button>
+    <button class="btn sm" id="theme">◐</button>
+    <button class="btn sm" id="dl">⬇ Log</button>
   </div>
 
   <div id="main">
-    <div id="pdfPane">
-      <div id="pageWrap" style="display:none">
-        <canvas id="pageCanvas"></canvas>
-        <div id="textLayer" class="textLayer"></div>
-      </div>
+    <div class="pv-scroll" id="scroll">
+      <div id="doc"></div>
       <div id="empty">
         <h2>Chưa có tài liệu</h2>
-        <div class="hint">
-          Kéo-thả file PDF vào đây, hoặc bấm <b>Mở PDF</b> ở thanh trên.<br>
-          Slide <b>không được commit</b> vào repo theo quy định bảo mật data —
-          nạp lúc chạy từ máy bạn.
-        </div>
-        <button class="btn primary" id="btnOpen2">📂 Chọn file PDF</button>
-        <div class="hint" style="font-size:12px; color:var(--fg-faint)">
-          pdf.js 5.7.284 bản offline trong <code>vendor/</code> — demo không cần mạng
-        </div>
-      </div>
-      <div id="selPopup">
-        <button class="btn sm primary" id="btnAskSel">💬 Hỏi về đoạn này</button>
+        <p>Kéo-thả PDF vào đây hoặc bấm <b>Mở PDF</b>. Slide không nằm trong repo
+           theo quy định bảo mật data — nạp từ máy bạn lúc chạy.</p>
+        <button class="btn pri" id="open2">Chọn file PDF</button>
       </div>
     </div>
 
-    <div id="chatPane">
-      <div id="chatHead">
-        <div class="t">Hỏi đáp theo slide</div>
-        <div class="sub" id="docName">chưa nạp tài liệu</div>
+    <div id="side">
+      <div id="sideHd">
+        <div style="flex:1">
+          <div class="t">Hỏi đáp theo slide</div>
+          <div class="s" id="docName">chưa nạp tài liệu</div>
+        </div>
+      </div>
+      <div id="vbar" class="hide">
+        <div id="orb">🎙</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
+          <div id="vtext">đang nghe…</div>
+          <div id="vlevel"><i></i></div>
+        </div>
+        <span id="veng">browser</span>
+        <button class="btn sm" id="vstop">Dừng</button>
       </div>
       <div id="log"></div>
-      <div id="composer">
-        <div id="selBar">
-          <span>📌 Trang <b id="selPage">–</b></span>
-          <span class="txt" id="selTxt"></span>
-          <button class="btn sm" id="btnClearSel">✕</button>
+      <div id="comp">
+        <div id="sel">
+          <span>Trang <b id="selPg">–</b></span>
+          <span class="x" id="selTx"></span>
+          <button class="btn sm" id="selX">✕</button>
         </div>
-        <div id="inputRow">
-          <textarea id="qInput" rows="1" placeholder="Hỏi về nội dung slide đang mở… (Enter để gửi)" disabled></textarea>
-          <button class="btn primary" id="btnSend" disabled>Gửi</button>
+        <div id="row">
+          <textarea id="q" rows="1" placeholder="Hỏi về nội dung slide… (Enter để gửi)" disabled></textarea>
+          <button class="btn pri" id="send" disabled>Gửi</button>
         </div>
         <div id="scen" class="hide">
-          <span class="lbl">Kịch bản:</span>
+          <span class="l">kịch bản</span>
           <button class="fu" data-s="happy">happy</button>
           <button class="fu" data-s="clarify">mơ hồ ②</button>
           <button class="fu" data-s="nog">không căn cứ ①</button>
@@ -317,252 +280,170 @@ button{font-family:inherit; font-size:inherit; cursor:pointer}
     </div>
   </div>
 </div>
-<input type="file" id="fileInput" accept="application/pdf" style="display:none">
+<div id="pop"><button class="btn sm pri" id="ask">💬 Hỏi về đoạn này</button></div>
+<input type="file" id="file" accept="application/pdf" hidden>
 <div id="toast"></div>
 
 <script type="module">
-import * as pdfjsLib from './vendor/pdf.min.mjs';
-import { askTutor, setDocIndex, getLog, attachFeedback, tokenize, norm, AI_CORE } from './core.mjs';
+import { createViewer, injectViewerCSS } from './viewer.mjs';
+import { createVoice } from './voice.mjs';
+import { askTutor, setDocIndex, getLog, attachFeedback, AI_CORE } from './core.mjs';
+import { $, el, esc, md, DECISION, buildRequest, toSpeech, initTheme, downloadLog } from './ui.mjs';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdf.worker.min.mjs';
+injectViewerCSS();
+const theme = initTheme();
+let sel = null, docName = 'chưa nạp';
 
-/* ══════════════════════════════════════════════════════════════
-   STATE — chỉ còn state của UI; toàn bộ logic AI nằm ở core.mjs
-   ══════════════════════════════════════════════════════════════ */
-const S = { doc:null, page:1, total:0, scale:1.35, fit:1.35, pages:[], sel:null, rendering:false };
+const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), 2300); };
 
-const $  = id => document.getElementById(id);
-const el = (tag, cls, txt) => { const e=document.createElement(tag); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e; };
-function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),2400); }
-
-/* ══════════════════════════════════════════════════════════════
-   NẠP + RENDER PDF
-   ══════════════════════════════════════════════════════════════ */
-async function loadPdf(data, name){
-  try{
-    S.doc = await pdfjsLib.getDocument({ data }).promise;
-  }catch(err){
-    toast('Không mở được PDF: '+err.message); console.error(err); return;
-  }
-  S.total = S.doc.numPages; S.page = 1;
-  $('docName').textContent = `${name} · ${S.total} trang`;
-  $('empty').style.display = 'none';
-  $('pageWrap').style.display = '';
-  ['btnPrev','btnNext','btnZoomIn','btnZoomOut','pageInput','qInput','btnSend'].forEach(i=>$(i).disabled=false);
-  $('pageTotal').textContent = '/ '+S.total;
-  $('scen').classList.remove('hide');
-
-  await buildIndex();
-  await fitToWidth();
-  await renderPage(1);
-  greet();
-  const ok = S.pages.filter(p=>p.text.length>20).length;
-  toast(`Đã nạp ${S.total} trang · trích được text ${ok}/${S.total} trang`);
-}
-
-/* Trích text TOÀN BỘ trang một lần — nguyên liệu retrieval, và là thứ
-   tutor hiện tại KHÔNG có (nó chỉ nhận được số trang). */
-async function buildIndex(){
-  S.pages = [];
-  for(let p=1; p<=S.total; p++){
-    const page = await S.doc.getPage(p);
-    const tc = await page.getTextContent();
-    S.pages.push({ page:p, text: tc.items.map(i=>i.str).join(' ').replace(/\s+/g,' ').trim() });
-  }
-  setDocIndex(S.pages);
-}
-
-/* Slide 16:9 export ra thường chỉ ~450pt bề ngang — để nguyên scale cố định
-   thì trang hiện bé xíu giữa pane rộng. Vừa khung theo bề ngang pane. */
-async function fitToWidth(){
-  if(!S.doc) return;
-  const vw = (await S.doc.getPage(1)).getViewport({ scale:1 }).width;
-  const avail = $('pdfPane').clientWidth - 56;          // trừ padding + thanh cuộn
-  S.fit = Math.max(.5, Math.min(3, avail / vw));
-  S.scale = S.fit;
-}
-
-async function renderPage(n){
-  if(!S.doc || S.rendering) return;
-  S.rendering = true;
-  S.page = Math.min(Math.max(1,n), S.total);
-  $('pageInput').value = S.page;
-
-  const page = await S.doc.getPage(S.page);
-  const viewport = page.getViewport({ scale:S.scale });
-  const dpr = window.devicePixelRatio || 1;
-
-  const canvas = $('pageCanvas'), ctx = canvas.getContext('2d');
-  canvas.width  = Math.floor(viewport.width  * dpr);
-  canvas.height = Math.floor(viewport.height * dpr);
-  canvas.style.width  = Math.floor(viewport.width)  + 'px';
-  canvas.style.height = Math.floor(viewport.height) + 'px';
-
-  const wrap = $('pageWrap');
-  wrap.style.width  = Math.floor(viewport.width)  + 'px';
-  wrap.style.height = Math.floor(viewport.height) + 'px';
-  /* pdf.js đọc biến này để đặt kích thước span trong text layer */
-  wrap.style.setProperty('--total-scale-factor', S.scale);
-
-  await page.render({
-    canvasContext: ctx, viewport,
-    transform: dpr !== 1 ? [dpr,0,0,dpr,0,0] : null,
-  }).promise;
-
-  const tl = $('textLayer');
-  tl.replaceChildren();
-  tl.style.width  = canvas.style.width;
-  tl.style.height = canvas.style.height;
-  await new pdfjsLib.TextLayer({
-    textContentSource: await page.getTextContent(),
-    container: tl, viewport,
-  }).render();
-
-  $('zoomLbl').textContent = Math.round(S.scale/S.fit*100)+'%';   // 100% = vừa khung
-  S.rendering = false;
-}
-
-/* ══════════════════════════════════════════════════════════════
-   BÔI ĐEN → POPUP
-   ══════════════════════════════════════════════════════════════ */
-$('textLayer').addEventListener('mouseup', () => setTimeout(()=>{
-  const sel = window.getSelection();
-  const text = sel && !sel.isCollapsed ? sel.toString().replace(/\s+/g,' ').trim() : '';
-  const pop = $('selPopup');
-  if(text.length < 2){ pop.classList.remove('on'); return; }
-
-  S.sel = { text, page:S.page };
-  const r = sel.getRangeAt(0).getBoundingClientRect();
-  const host = $('pdfPane').getBoundingClientRect();
-  pop.style.left = Math.max(4, r.left - host.left + $('pdfPane').scrollLeft + r.width/2 - 78) + 'px';
-  pop.style.top  = Math.max(4, r.top  - host.top  + $('pdfPane').scrollTop  - 42) + 'px';
-  pop.classList.add('on');
-}, 10));
-
-$('pdfPane').addEventListener('mousedown', e=>{
-  if(!$('selPopup').contains(e.target)) $('selPopup').classList.remove('on');
+/* ── viewer ────────────────────────────────────────────────────────── */
+const viewer = createViewer({
+  container: $('#doc'),
+  onPage: p => { $('#pgIn').value = p; },
+  onReady: ({ total, pages, name }) => {
+    setDocIndex(pages);
+    docName = `${name} · ${total} trang`;
+    $('#docName').textContent = docName;
+    $('#empty').style.display = 'none';
+    $('#pgTot').textContent = '/ ' + total;
+    $('#zl').textContent = '100%';
+    ['prev','next','zi','zo','pgIn','q','send','mic'].forEach(i => $('#'+i).disabled = false);
+    $('#scen').classList.remove('hide');
+    greet(total);
+    const ok = pages.filter(p => p.text.length > 20).length;
+    toast(`${total} trang · trích được text ${ok}/${total}`);
+  },
+  onSelection: s => {
+    sel = s;
+    const pop = $('#pop');
+    if (!s || !s.rect){ pop.classList.remove('on'); return; }
+    pop.style.left = Math.max(6, s.rect.left + s.rect.width / 2 - 80) + 'px';
+    pop.style.top  = Math.max(6, s.rect.top - 40) + 'px';
+    pop.classList.add('on');
+  },
 });
-$('btnAskSel').onclick = () => {
-  $('selPopup').classList.remove('on');
-  showSelBar();
-  $('qInput').value = `Giải thích đoạn bôi đen ở Trang ${S.sel.page}.`;
-  $('qInput').focus();
+
+/* ── giọng nói ─────────────────────────────────────────────────────── */
+const voice = createVoice({
+  onPartial: t => { $('#vtext').textContent = t || 'đang nghe…'; },
+  onFinal: t => { $('#q').value = t; send(); },
+  onLevel: v => { $('#vlevel').firstElementChild.style.width = (v * 100) + '%'; },
+  onState: s => {
+    const orb = $('#orb');
+    orb.classList.toggle('live', s === 'listening');
+    orb.classList.toggle('speak', s === 'speaking');
+    if (s === 'thinking') $('#vtext').textContent = 'đang nhận diện…';
+    if (s === 'speaking') $('#vtext').textContent = 'tutor đang nói… (nói để ngắt lời)';
+    if (s.startsWith?.('error')) toast('Giọng nói: ' + s.slice(6));
+  },
+});
+
+$('#mic').onclick = async () => {
+  if (voice.listening){ voice.stop(); $('#vbar').classList.add('hide'); $('#mic').classList.remove('on'); return; }
+  if (await voice.probe()){ voice.setEngine('ptalk'); $('#veng').textContent = 'ptalk (vi)'; }
+  else { $('#veng').textContent = 'browser'; }
+  try{
+    await voice.start();
+    $('#vbar').classList.remove('hide');
+    $('#mic').classList.add('on');
+  }catch(err){ toast(err.message); }
 };
-function showSelBar(){
-  if(!S.sel) return;
-  $('selBar').classList.add('on');
-  $('selPage').textContent = S.sel.page;
-  $('selTxt').textContent = '"'+S.sel.text.slice(0,90)+(S.sel.text.length>90?'…':'')+'"';
-}
-$('btnClearSel').onclick = () => { S.sel=null; $('selBar').classList.remove('on'); };
+$('#vstop').onclick = () => { voice.stop(); $('#vbar').classList.add('hide'); $('#mic').classList.remove('on'); };
 
-/* ══════════════════════════════════════════════════════════════
-   RENDER HỘI THOẠI
-   ══════════════════════════════════════════════════════════════ */
-function greet(){
-  $('log').replaceChildren();
-  const n = el('div','sysnote');
-  n.innerHTML = `<b>Mình trả lời dựa trên tài liệu đang mở</b> (${S.total} trang) — và luôn kèm số trang để bạn tự kiểm.
-    Nội dung ngoài tài liệu mình sẽ nói rõ là ngoài, không trộn vào.
-    <br><span style="color:var(--fg-faint)">Bôi đen một đoạn trên slide rồi bấm “Hỏi về đoạn này” để được trả lời sát nhất.</span>`;
-  $('log').append(n);
+/* ── hội thoại ─────────────────────────────────────────────────────── */
+function greet(total){
+  $('#log').replaceChildren();
+  const n = el('div','note');
+  n.innerHTML = `<b>Mình trả lời dựa trên tài liệu đang mở</b> (${total} trang), luôn kèm số trang để bạn tự kiểm.
+    Ngoài tài liệu mình nói rõ là ngoài, không trộn vào.<br>
+    <span style="color:var(--faint)">Bôi đen một đoạn rồi bấm “Hỏi về đoạn này”, hoặc bấm 🎙 để nói chuyện.</span>`;
+  $('#log').append(n);
 }
 
-const esc = s => String(s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-const md  = s => esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<i>$1</i>');
-
-function addUser(q, sel){
-  const m = el('div','msg user');
-  if(sel){
-    const a = el('div','attach');
-    a.innerHTML = `📌 Trang ${sel.page} · <span class="q">"${esc(sel.text.slice(0,70))}${sel.text.length>70?'…':''}"</span>`;
+function addUser(q, s){
+  const m = el('div','msg u');
+  if (s){
+    const a = el('div','att');
+    a.innerHTML = `Trang ${s.page} · <i>“${esc(s.text.slice(0,64))}${s.text.length>64?'…':''}”</i>`;
     m.append(a);
   }
-  m.append(el('div','bubble', q));
-  $('log').append(m); scroll();
+  m.append(el('div','bub', q));
+  $('#log').append(m); scroll();
 }
 
-function addPending(){
-  const m = el('div','msg ai'), b = el('div','bubble');
-  b.innerHTML = `<span class="spin"></span> <span style="color:var(--fg-dim)">đang tìm căn cứ trong ${S.total} trang…</span>`;
-  m.append(b); $('log').append(m); scroll();
+function addWait(){
+  const m = el('div','msg a'), b = el('div','bub');
+  b.innerHTML = `<span class="spin"></span> <span style="color:var(--dim)">đang tìm căn cứ trong ${viewer.total} trang…</span>`;
+  m.append(b); $('#log').append(m); scroll();
   return m;
 }
 
 function addAI(res, node){
   node.replaceChildren();
-
-  /* trace strip — bước 2 của workflow, mở sẵn để người xem demo thấy ngay */
-  const d = el('details','trace'); d.open = true;
+  const d = el('details','tr'); d.open = true;
   d.append(el('summary', null, `workflow · ${res.trace.length} bước · ${res.latency_ms}ms`));
   const ol = el('ol');
-  res.trace.forEach(t=>{
+  res.trace.forEach(t => {
     const li = el('li');
     li.innerHTML = `<b>${esc(t.step)}</b> — ${esc(t.detail)} <span class="ms">${t.ms}ms</span>`;
     ol.append(li);
   });
   d.append(ol); node.append(d);
 
-  /* badge quyết định + độ tin cậy (G2) */
-  const bs = el('div','badges');
-  const label = { answer:'✓ có căn cứ', clarify:'? cần làm rõ',
-                  no_grounding:'∅ không có căn cứ', out_of_scope:'⊘ ngoài phạm vi' }[res.decision];
-  bs.append(el('span','badge '+res.decision, label));
-  bs.append(el('span','badge conf', 'tin cậy '+Math.round(res.confidence*100)+'%'));
-  node.append(bs);
+  const info = DECISION[res.decision];
+  const bd = el('div','bd');
+  bd.append(el('span', 'badge ' + info.tone, `${info.icon} ${info.label}`));
+  bd.append(el('span','badge cf', 'tin cậy ' + Math.round(res.confidence * 100) + '%'));
+  node.append(bd);
 
-  const b = el('div','bubble');
+  const b = el('div','bub');
   b.innerHTML = md(res.answer);
-  if(res.clarifying_question){
-    const cq = el('div');
-    cq.style.cssText = 'margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-weight:550';
-    cq.innerHTML = md(res.clarifying_question);
-    b.append(cq);
+  if (res.clarifying_question){
+    const c = el('div');
+    c.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-weight:560';
+    c.innerHTML = md(res.clarifying_question);
+    b.append(c);
   }
   node.append(b);
 
-  /* citation chips — bấm để nhảy trang + highlight (G11) */
-  if(res.citations?.length){
-    const c = el('div','cites');
-    res.citations.forEach(ct=>{
-      const chip = el('button','cite');
-      chip.innerHTML = `📄 Trang ${ct.ref} <span class="qt">"${esc(ct.quote.slice(0,42))}…"</span>`;
+  if (res.citations?.length){
+    const c = el('div','cts');
+    res.citations.forEach(ct => {
+      const chip = el('button','ct');
+      chip.innerHTML = `Trang ${ct.ref} <q>${esc(ct.quote.slice(0,38))}…</q>`;
       chip.title = ct.quote;
-      chip.onclick = () => jumpTo(ct.page, ct.quote);
+      chip.onclick = () => viewer.highlight(ct.page, ct.quote);
       c.append(chip);
     });
     node.append(c);
   }
 
-  /* G15 feedback · G9 sửa · G8 gạt bỏ */
   const acts = el('div','acts');
-  const up = el('button','iconbtn','👍'), down = el('button','iconbtn','👎');
-  up.title = 'Hữu ích'; down.title = 'Chưa đúng';
-  const why = el('div','whybad'); why.style.display = 'none';
-  const inp = el('input'); inp.placeholder = 'Sai chỗ nào? (giúp nhóm sửa prompt)';
-  const sendWhy = el('button','btn sm','Gửi');
-  why.append(inp, sendWhy);
+  const up = el('button','ib','👍'), dn = el('button','ib','👎');
+  up.title = 'Hữu ích'; dn.title = 'Chưa đúng';
+  const why = el('div','why'); why.style.display = 'none';
+  const inp = el('input'); inp.placeholder = 'Sai chỗ nào?';
+  const ok = el('button','btn sm','Gửi');
+  why.append(inp, ok);
+  up.onclick = () => { up.classList.toggle('up'); dn.classList.remove('dn'); why.style.display='none'; attachFeedback('up',''); };
+  dn.onclick = () => { dn.classList.add('dn'); up.classList.remove('up'); why.style.display='flex'; inp.focus(); };
+  ok.onclick = () => { attachFeedback('down', inp.value); why.style.display='none'; toast('Đã ghi vào log phiên'); };
 
-  up.onclick   = () => { up.classList.toggle('on-up'); down.classList.remove('on-down'); why.style.display='none'; attachFeedback('up',''); };
-  down.onclick = () => { down.classList.add('on-down'); up.classList.remove('on-up'); why.style.display='flex'; inp.focus(); };
-  sendWhy.onclick = () => { attachFeedback('down', inp.value); why.style.display='none'; toast('Đã ghi vào log phiên — xuất bằng ⬇ Xuất log'); };
-
-  const narrow = el('button','btn sm','✏️ Thu hẹp phạm vi');
-  narrow.onclick = () => {
-    $('qInput').value = 'Chỉ trả lời trong phạm vi Trang '+(res.citations[0]?.page ?? S.page)+': ';
-    $('qInput').focus();
-  };
-  const hide = el('button','btn sm','✕ Ẩn');
-  hide.onclick = () => node.classList.toggle('collapsed');
-
-  acts.append(up, down, narrow, el('span','sep'), hide);
+  const nar = el('button','btn sm','Thu hẹp phạm vi');
+  nar.onclick = () => { $('#q').value = `Chỉ trả lời trong phạm vi Trang ${res.citations[0]?.page ?? viewer.page}: `; $('#q').focus(); };
+  const spk = el('button','btn sm','🔊 Đọc');
+  spk.onclick = () => voice.speak(toSpeech(res));
+  const fold = el('button','btn sm','✕ Ẩn');
+  fold.onclick = () => node.classList.toggle('fold');
+  acts.append(up, dn, nar, spk, el('span','sp'), fold);
   node.append(acts, why);
 
-  if(res.follow_ups?.length){
-    const f = el('div','followups');
-    res.follow_ups.forEach(t=>{
-      const btn = el('button','fu',t);
-      btn.onclick = () => { $('qInput').value = t; send_(); };
+  if (res.follow_ups?.length){
+    const f = el('div','fus');
+    res.follow_ups.forEach(t => {
+      const btn = el('button','fu', t);
+      btn.onclick = () => { $('#q').value = t; send(); };
       f.append(btn);
     });
     node.append(f);
@@ -570,145 +451,104 @@ function addAI(res, node){
   scroll();
 }
 
-const scroll = () => { const l=$('log'); l.scrollTop = l.scrollHeight; };
+const scroll = () => { const l = $('#log'); l.scrollTop = l.scrollHeight; };
 
-/* nhảy tới trang + tô đoạn được trích */
-async function jumpTo(page, quote){
-  if(page && page !== S.page) await renderPage(page);
-  requestAnimationFrame(()=>highlight(quote));
-}
-function highlight(quote){
-  const spans = [...$('textLayer').querySelectorAll('span')];
-  spans.forEach(s=>s.classList.remove('cite-hit'));
-  const words = tokenize(quote).slice(0,4);
-  if(!words.length || !spans.length) return;
-  let start = spans.findIndex(s => norm(s.textContent).includes(words[0]));
-  if(start < 0) start = spans.findIndex(s => words.some(w=>norm(s.textContent).includes(w)));
-  if(start < 0) return;
-  let acc = 0;
-  for(let i=start; i<spans.length && acc < quote.length; i++){
-    spans[i].classList.add('cite-hit');
-    acc += spans[i].textContent.length + 1;
-  }
-  spans[start].scrollIntoView({ block:'center', behavior:'smooth' });
-}
+async function send(){
+  const q = $('#q').value.trim();
+  if (!q || !viewer.total) return;
+  const s = sel;
+  addUser(q, s);
+  $('#q').value = ''; $('#q').style.height = 'auto';
+  sel = null; $('#sel').classList.remove('on'); $('#pop').classList.remove('on');
 
-/* ══════════════════════════════════════════════════════════════
-   GỬI CÂU HỎI → gọi qua seam
-   ══════════════════════════════════════════════════════════════ */
-async function send_(){
-  const q = $('qInput').value.trim();
-  if(!q || !S.doc) return;
-  const sel = S.sel;
-  addUser(q, sel);
-  $('qInput').value = ''; $('qInput').style.height = 'auto';
-  S.sel = null; $('selBar').classList.remove('on');
-
-  const node = addPending();
-  const req = {
-    question: q,
-    selection: sel ? { text:sel.text, page:sel.page, rects:null } : null,
-    page_text: S.pages.find(p=>p.page===S.page)?.text ?? '',
-    document: {
-      id: $('docName').textContent, title: $('docName').textContent,
-      page_count: S.total, current_page: S.page,
-    },
-    history: getLog().slice(-4).map(l=>({ role:'user', content:l.request.question })),
-  };
+  const node = addWait();
   try{
-    addAI(await askTutor(req), node);
+    const res = await askTutor(buildRequest({
+      question: q, selection: s, viewer, docName,
+      history: getLog().slice(-4).map(l => ({ role:'user', content:l.request.question })),
+    }));
+    addAI(res, node);
+    if (voice.listening) voice.speak(toSpeech(res));
   }catch(err){
-    node.replaceChildren(el('div','bubble','Lỗi core: '+err.message));
-    console.error(err);
+    node.replaceChildren(el('div','bub','Lỗi core: ' + err.message));
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   KỊCH BẢN DEMO — bắn nhanh 5 đường đi khi trình bày
-   ══════════════════════════════════════════════════════════════ */
+/* ── kịch bản demo ─────────────────────────────────────────────────── */
 const SCEN = {
-  happy:   { page:22, q:'Giải thích đoạn bôi đen ở Trang 22.', select:true },
-  clarify: { page:37, q:'cái này khác cái kia chỗ nào?' },
-  nog:     { page:30, q:'LangGraph có hỗ trợ streaming không?' },
-  oos:     { page:40, q:'Làm hộ mình Lab 3 với, cho mình đáp án luôn.' },
-  domain:  { page:20, q:'ReAct là một kiểu fine-tuning đúng không?' },
+  happy:{p:22,q:'Giải thích đoạn bôi đen ở Trang 22.',s:true},
+  clarify:{p:37,q:'cái này khác cái kia chỗ nào?'},
+  nog:{p:30,q:'LangGraph có hỗ trợ streaming không?'},
+  oos:{p:40,q:'Làm hộ mình Lab 3 với, cho mình đáp án luôn.'},
+  domain:{p:20,q:'ReAct là một kiểu fine-tuning đúng không?'},
 };
-document.querySelectorAll('#scen .fu').forEach(b=>{
-  b.onclick = async () => {
-    const s = SCEN[b.dataset.s];
-    if(!s || !S.doc) return;
-    await renderPage(Math.min(s.page, S.total));
-    if(s.select){
-      const t = S.pages.find(p=>p.page===S.page)?.text || '';
-      S.sel = { text: t.slice(0,220), page: S.page };
-      showSelBar();
-    }
-    $('qInput').value = s.q;
-    send_();
-  };
+document.querySelectorAll('#scen .fu').forEach(b => b.onclick = () => {
+  const s = SCEN[b.dataset.s];
+  if (!s || !viewer.total) return;
+  viewer.goTo(Math.min(s.p, viewer.total));
+  if (s.s){
+    sel = { text: viewer.pageText(Math.min(s.p, viewer.total)).slice(0,220), page: Math.min(s.p, viewer.total) };
+    $('#sel').classList.add('on');
+    $('#selPg').textContent = sel.page;
+    $('#selTx').textContent = '“' + sel.text.slice(0,70) + '…”';
+  }
+  $('#q').value = s.q;
+  setTimeout(send, 260);
 });
 
-/* ══════════════════════════════════════════════════════════════
-   WIRING
-   ══════════════════════════════════════════════════════════════ */
-const openFile = () => $('fileInput').click();
-$('btnOpen').onclick = openFile;
-$('btnOpen2').onclick = openFile;
-$('fileInput').onchange = async e => {
+/* ── wiring ────────────────────────────────────────────────────────── */
+const openFile = () => $('#file').click();
+$('#open').onclick = openFile; $('#open2').onclick = openFile;
+$('#file').onchange = async e => {
   const f = e.target.files[0];
-  if(f) loadPdf(new Uint8Array(await f.arrayBuffer()), f.name);
+  if (f) viewer.load(new Uint8Array(await f.arrayBuffer()), f.name);
 };
-
-const pane = $('pdfPane');
-pane.addEventListener('dragover',  e=>{ e.preventDefault(); pane.classList.add('dragover'); });
-pane.addEventListener('dragleave', ()=>pane.classList.remove('dragover'));
-pane.addEventListener('drop', async e=>{
-  e.preventDefault(); pane.classList.remove('dragover');
+const sc = $('#scroll');
+sc.addEventListener('dragover', e => { e.preventDefault(); sc.classList.add('drag'); });
+sc.addEventListener('dragleave', () => sc.classList.remove('drag'));
+sc.addEventListener('drop', async e => {
+  e.preventDefault(); sc.classList.remove('drag');
   const f = e.dataTransfer.files[0];
-  if(f?.type === 'application/pdf') loadPdf(new Uint8Array(await f.arrayBuffer()), f.name);
+  if (f?.type === 'application/pdf') viewer.load(new Uint8Array(await f.arrayBuffer()), f.name);
   else toast('Cần một file PDF');
 });
-
-$('btnPrev').onclick    = ()=>renderPage(S.page-1);
-$('btnNext').onclick    = ()=>renderPage(S.page+1);
-$('pageInput').onchange = e=>renderPage(parseInt(e.target.value)||1);
-$('btnZoomIn').onclick  = ()=>{ S.scale=Math.min(3,S.scale+.2); renderPage(S.page); };
-$('btnZoomOut').onclick = ()=>{ S.scale=Math.max(.5,S.scale-.2); renderPage(S.page); };
-$('btnSend').onclick    = send_;
-
-$('qInput').addEventListener('keydown', e=>{
-  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send_(); }
-});
-$('qInput').addEventListener('input', e=>{
-  e.target.style.height='auto';
-  e.target.style.height=Math.min(130,e.target.scrollHeight)+'px';
-});
-document.addEventListener('keydown', e=>{
-  if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT') return;
-  if(e.key==='ArrowLeft')  renderPage(S.page-1);
-  if(e.key==='ArrowRight') renderPage(S.page+1);
-});
-
-/* xuất trace phiên → artifact cho eval/ (rubric R5 đòi log trong repo) */
-$('btnLog').onclick = () => {
-  const turns = getLog();
-  if(!turns.length){ toast('Chưa có lượt hỏi nào'); return; }
-  const blob = new Blob([JSON.stringify({
-    exported_at: new Date().toISOString(), core: AI_CORE,
-    document: $('docName').textContent, turns,
-  }, null, 2)], { type:'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `session-log-${Date.now()}.json`;
-  a.click();
-  toast(`Đã xuất ${turns.length} lượt`);
+$('#ask').onclick = () => {
+  $('#pop').classList.remove('on');
+  if (!sel) return;
+  $('#sel').classList.add('on');
+  $('#selPg').textContent = sel.page;
+  $('#selTx').textContent = '“' + sel.text.slice(0,80) + (sel.text.length>80?'…':'') + '”';
+  $('#q').value = `Giải thích đoạn bôi đen ở Trang ${sel.page}.`;
+  $('#q').focus();
 };
+$('#selX').onclick = () => { sel = null; $('#sel').classList.remove('on'); };
+$('#prev').onclick = () => viewer.goTo(viewer.page - 1);
+$('#next').onclick = () => viewer.goTo(viewer.page + 1);
+$('#pgIn').onchange = e => viewer.goTo(parseInt(e.target.value) || 1);
+$('#zi').onclick = () => { viewer.setZoom(viewer.scale + .2); $('#zl').textContent = Math.round((viewer.scale+.2)/viewer.fit*100)+'%'; };
+$('#zo').onclick = () => { viewer.setZoom(viewer.scale - .2); $('#zl').textContent = Math.round((viewer.scale-.2)/viewer.fit*100)+'%'; };
+$('#send').onclick = send;
+$('#q').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+});
+$('#q').addEventListener('input', e => {
+  e.target.style.height = 'auto';
+  e.target.style.height = Math.min(130, e.target.scrollHeight) + 'px';
+});
+$('#theme').onclick = () => theme.toggle();
+$('#dl').onclick = () => {
+  const t = getLog();
+  if (!t.length) return toast('Chưa có lượt hỏi nào');
+  downloadLog(t, { core: AI_CORE, variant:'console', document: docName });
+  toast(`Đã xuất ${t.length} lượt`);
+};
+document.addEventListener('mousedown', e => {
+  if (!$('#pop').contains(e.target)) $('#pop').classList.remove('on');
+});
+addEventListener('resize', () => { if (viewer.total) viewer.fitWidth().then(() => viewer.setZoom(viewer.fit)); });
 
-/* nạp sẵn qua ?file= (PDF cùng origin) */
 const qs = new URLSearchParams(location.search).get('file');
-if(qs){
-  fetch(qs).then(r=>r.arrayBuffer())
-    .then(b=>loadPdf(new Uint8Array(b), qs.split('/').pop()))
-    .catch(e=>toast('Không nạp được ?file= — '+e.message));
-}
+if (qs) fetch(qs).then(r => r.arrayBuffer())
+  .then(b => viewer.load(new Uint8Array(b), qs.split('/').pop()))
+  .catch(e => toast('Không nạp được ?file= — ' + e.message));
 </script>
