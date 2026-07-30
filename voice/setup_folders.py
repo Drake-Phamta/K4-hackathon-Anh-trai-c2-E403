@@ -1,6 +1,5 @@
 import os
 
-# Đường dẫn tương đối từ thư mục ptalk_engine
 folders = [
     "models/ZipFormer",
     "data",

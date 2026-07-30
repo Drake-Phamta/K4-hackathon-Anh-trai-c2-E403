@@ -3,6 +3,7 @@ node_modules/
 *.env
 .env
 *.key
+*.pyc
 
 # ── Tài liệu khoá học: KHÔNG commit (quy định bảo mật data pack) ──
 # Slide nạp lúc chạy từ máy cá nhân, không nằm trong repo.
