@@ -19,7 +19,7 @@ Loại: [x] Tối ưu tính năng có sẵn  [ ] Tính năng mới
 - Job executor + workflow (đính kèm worksheet JTBD / ảnh sơ đồ): Học viên đang trong buổi học.
 - Core JTBD: Làm rõ ngay nội dung của một trang slide cụ thể mà không cần AI phải tìm kiếm mông lung trong toàn bộ tài liệu.
 - Problem statement: Hệ thống hiện tại chỉ truyền chuỗi văn bản bôi đen ngắn ngủi cho AI, khiến AI thiếu bối cảnh và từ chối trả lời (hoặc trả lời sai không có trích dẫn) khi học viên hỏi các câu hỏi vĩ mô như "tóm tắt trang này".
-- Evidence: (Đã trích xuất ra file `eval/loi_mu_tai_lieu.csv`)
+- Evidence: (Đã trích xuất ra file `eval/missing_context_errors.csv`)
   - Số liệu mining: n = 1261 lượt hội thoại, 307 lượt (24%) lỗi thiếu context, 46.2% lỗi trả lời không có trích dẫn.
   - ≥5 quote nguyên văn: 
     - Q: "tóm tắt nội dung chính trong slide này" -> A: "Xin lỗi bạn, tôi không tìm thấy..."
@@ -41,7 +41,7 @@ Loại: [x] Tối ưu tính năng có sẵn  [ ] Tính năng mới
 *(Nhóm sẽ điền vào đây ở CP4)*
 
 ## §7. Kiểm thử
-- Golden set: Sử dụng file `eval/loi_mu_tai_lieu.csv` làm tập test chính.
+- Golden set: Sử dụng file `eval/missing_context_errors.csv` làm tập test chính.
 - Quality bar: Đạt khi ≥ ___% qua bộ (Chốt lúc 23:59 N1).
 
 ## §8. Phân công & kế hoạch
