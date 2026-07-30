@@ -1,5 +1,3 @@
-* [ ] 
-
 # Mini Hackathon AI — Batch 03
 
 **Đội thi:** Anh trai c2 (Zone Z5)

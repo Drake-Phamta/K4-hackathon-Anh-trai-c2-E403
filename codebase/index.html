@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VLearn Voice AI - Prototype</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Left Side: Slide Content -->
+        <div class="slide-panel">
+            <div class="slide-header">
+                <h2>Ngày 04: Kỹ thuật Tối ưu Prompt & Tool Calling</h2>
+                <span class="slide-page">Trang 45</span>
+            </div>
+            <div class="slide-content" id="slide-text">
+                <h3>Chiến lược quản lý Context (Ngữ cảnh)</h3>
+                <p>Có 4 chiến lược chính để tối ưu hóa prompt và ngữ cảnh trong kỹ thuật lập trình AI Agent:</p>
+                <ol>
+                    <li><strong>Write:</strong> Chuyển đổi trạng thái (state) ra ngoài ngữ cảnh chính để duy trì context luôn tinh gọn.</li>
+                    <li><strong>Select:</strong> Chỉ chọn lọc và đưa vào những thông tin thực sự liên quan, điển hình như kỹ thuật RAG.</li>
+                    <li><strong>Compress:</strong> Thực hiện tóm tắt lịch sử hội thoại và các kết quả trả về từ tool.</li>
+                    <li><strong>Isolate:</strong> Tách biệt ngữ cảnh dành cho các tác vụ phụ.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Right Side: Chatbot -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <div class="ai-avatar">🤖</div>
+                <div class="ai-info">
+                    <h3>VLearn Voice Tutor</h3>
+                    <span class="status">Sẵn sàng nghe bạn nói...</span>
+                </div>
+            </div>
+            
+            <div class="chat-history" id="chat-history">
+                <div class="message ai">
+                    <p>Chào bạn! Mình là AI Tutor. Nhấn giữ nút Micro bên dưới và hỏi mình bất cứ điều gì về trang slide bên trái nhé!</p>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <button id="record-btn" class="record-btn">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    <span>Giữ để nói</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+:root {
+    --bg-dark: #0f172a;
+    --panel-bg: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --accent-blue: #0ea5e9;
+    --accent-blue-hover: #0284c7;
+    --accent-neon: #38bdf8;
+    --border-color: #334155;
+    --message-user: #0ea5e9;
+    --message-ai: #334155;
+    --record-active: #ef4444;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    max-width: 1400px;
+    height: 95vh;
+    gap: 20px;
+    padding: 20px;
+}
+
+.slide-panel, .chat-panel {
+    background-color: var(--panel-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.slide-panel { flex: 6; }
+.chat-panel { flex: 4; }
+
+.slide-header, .chat-header {
+    padding: 20px 30px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.slide-content {
+    padding: 40px;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #e2e8f0;
+}
+
+.slide-content h3 { color: var(--accent-neon); margin-bottom: 20px; }
+.slide-content ol { margin-top: 20px; margin-left: 20px; }
+.slide-content li { margin-bottom: 15px; }
+
+.chat-history {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.message {
+    max-width: 85%;
+    padding: 12px 18px;
+    border-radius: 12px;
+    line-height: 1.5;
+}
+
+.message.ai {
+    background-color: var(--message-ai);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+
+.message.user {
+    background-color: var(--message-user);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-input-area {
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.5);
+    display: flex;
+    justify-content: center;
+}
+
+.record-btn {
+    background-color: var(--accent-blue);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+}
+
+.record-btn:hover {
+    background-color: var(--accent-blue-hover);
+    transform: translateY(-2px);
+}
+
+.record-btn.recording {
+    background-color: var(--record-active);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
