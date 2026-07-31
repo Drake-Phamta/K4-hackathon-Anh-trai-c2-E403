@@ -46,7 +46,7 @@ chấm được ai."*
 
 ## Bảng chấm — lượt 1
 
-| Case | Người chấm A (Ngô Ngọc Quyền · 2A202601928) | Người chấm B (Phạm Tuấn Anh · 2A202601840) | Lệch | Ghi chú của người chấm |
+| Case | Người chấm A (Phạm Tuấn Anh · 2A202601840) | Người chấm B (Ngô Ngọc Quyền · 2A202601928) | Lệch | Ghi chú của người chấm |
 |---|---|---|---|---|
 | G21 | | | | |
 | G01 | | | | |

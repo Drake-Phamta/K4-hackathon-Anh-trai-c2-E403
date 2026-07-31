@@ -416,8 +416,8 @@ Danh sách đầy đủ: [`TEAMMATES.md`](TEAMMATES.md). Nhóm **4 người trê
 
 | Vai | Tên (mã HV) | Lãnh thổ file |
 |---|---|---|
-| P1 · Product Owner & Spec Keeper | **Phạm Tuấn Anh** (2A202601840) | `spec.md`, `README.md`, `TEAMMATES.md` |
-| P2 · Data & Evidence | **Ngô Ngọc Quyền** (2A202601928) | `eval/verify-evidence.py`, `eval/evidence-report.md`, `analyze_chatlog.py`, `extract_failed_cases.py` |
+| P1 · Product Owner & Spec Keeper | **Ngô Ngọc Quyền** (2A202601928) | `spec.md`, `README.md`, `TEAMMATES.md` |
+| P2 · Data & Evidence | **Phạm Tuấn Anh** (2A202601840) | `eval/verify-evidence.py`, `eval/evidence-report.md`, `analyze_chatlog.py`, `extract_failed_cases.py` |
 | P3 · AI/Prompt Engineer | **Nguyễn Kỳ Anh** (2A202601558) | `codebase/core.mjs`, `codebase/server.mjs`, `api/main.py` |
 | P4 · QA & Golden Set | **Bế Quốc Khánh** (2A202601463) | `eval/golden-set.json`, `eval/run-golden.mjs`, `codebase/test-*.mjs`, `web/e2e/vlearn.spec.ts` |
 | P5 · UI/UX Builder *(kiêm)* | **Nguyễn Kỳ Anh** (2A202601558) | `codebase/prototype*.html`, `codebase/ui.mjs`, `codebase/viewer.mjs`, `web/` |

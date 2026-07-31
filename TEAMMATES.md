@@ -9,16 +9,16 @@
 | # | Họ và tên | MSSV | Vai | Lãnh thổ file — chịu trách nhiệm giải thích được |
 |---|---|---|---|---|
 | 1 | Nguyễn Kỳ Anh | 2A202601558 | P3 · AI/Prompt Engineer · P5 · UI/UX Builder | `codebase/core.mjs` · `codebase/server.mjs` · `api/main.py` · `codebase/prototype.html` · `codebase/ui.mjs` · `codebase/viewer.mjs` · `web/` |
-| 2 | Ngô Ngọc Quyền | 2A202601928 | P2 · Data & Evidence | `eval/verify-evidence.py` · `eval/evidence-report.md` · `analyze_chatlog.py` · `extract_failed_cases.py` |
-| 3 | Phạm Tuấn Anh | 2A202601840 | P1 · Product Owner & Spec Keeper | `spec.md` · `README.md` · `TEAMMATES.md` |
+| 2 | Ngô Ngọc Quyền | 2A202601928 | P1 · Product Owner & Spec Keeper | `spec.md` · `README.md` · `TEAMMATES.md` |
+| 3 | Phạm Tuấn Anh | 2A202601840 | P2 · Data & Evidence | `eval/verify-evidence.py` · `eval/evidence-report.md` · `analyze_chatlog.py` · `extract_failed_cases.py` |
 | 4 | Bế Quốc Khánh | 2A202601463 | P4 · QA & Golden Set · P6 · Demo & Validation | `eval/golden-set.json` · `eval/run-golden.mjs` · `codebase/test-core.mjs` · `codebase/test-intents.mjs` · `web/e2e/vlearn.spec.ts` · `validation/` · `demo-slides.html` · `demo-script.md` |
 
 ## Phân công theo vai P1–P6
 
 | Vai | Người phụ trách | MSSV | Lãnh thổ file |
 |---|---|---|---|
-| **P1** · Product Owner & Spec Keeper | Phạm Tuấn Anh | 2A202601840 | `spec.md` · `README.md` · `TEAMMATES.md` |
-| **P2** · Data & Evidence | Ngô Ngọc Quyền | 2A202601928 | `eval/verify-evidence.py` · `eval/evidence-report.md` · `analyze_chatlog.py` · `extract_failed_cases.py` |
+| **P1** · Product Owner & Spec Keeper | Ngô Ngọc Quyền | 2A202601928 | `spec.md` · `README.md` · `TEAMMATES.md` |
+| **P2** · Data & Evidence | Phạm Tuấn Anh | 2A202601840 | `eval/verify-evidence.py` · `eval/evidence-report.md` · `analyze_chatlog.py` · `extract_failed_cases.py` |
 | **P3** · AI/Prompt Engineer | Nguyễn Kỳ Anh | 2A202601558 | `codebase/core.mjs` · `codebase/server.mjs` · `api/main.py` |
 | **P4** · QA & Golden Set | Bế Quốc Khánh | 2A202601463 | `eval/golden-set.json` · `eval/run-golden.mjs` · `codebase/test-core.mjs` · `codebase/test-intents.mjs` · `web/e2e/vlearn.spec.ts` |
 | **P5** · UI/UX Builder | Nguyễn Kỳ Anh | 2A202601558 | `codebase/prototype.html` · `codebase/ui.mjs` · `codebase/viewer.mjs` · `web/` |
@@ -32,7 +32,7 @@ người thật là hai nửa của cùng một câu hỏi "sản phẩm này c�
 ## Chấm D8 — hai người độc lập
 
 Chiều D8 (*đúng cỡ · đúng giọng*) là chiều duy nhất cần người chấm, không nằm trong quality
-bar. Hai người chấm: **Ngô Ngọc Quyền** (P2) và **Phạm Tuấn Anh** (P1) — cố ý không giao
+bar. Hai người chấm: **Phạm Tuấn Anh** (P2) và **Ngô Ngọc Quyền** (P1) — cố ý không giao
 cho P4/P6, vì người xây golden set tự chấm output của chính bộ đo mình viết thì mất tính
 độc lập. Bảng chấm: `eval/D8-human-scoring.md`.
 
