@@ -5,11 +5,24 @@ node_modules/
 *.key
 *.pyc
 
-# ── Tài liệu khoá học: KHÔNG commit (quy định bảo mật data pack) ──
-# Slide nạp lúc chạy từ máy cá nhân, không nằm trong repo.
-*.pdf
-!tham-khao/*.pdf
+# ── Text đã trích từ slide: KHÔNG commit ──
+# pages.json chứa NGUYÊN VĂN nội dung slide → sinh lúc chạy, ghi ra ngoài repo.
 pages.json
 **/pages.json
 session-log-*.json
-STT_GUIDE.md
+
+# ── PDF ──
+# Chặn theo mặc định, mở ngoại lệ cho 3 thứ phải có trong bài nộp.
+# LƯU Ý: .gitignore KHÔNG hỗ trợ comment cuối dòng — viết `!x.pdf  # ghi chú`
+# thì cả phần ghi chú bị tính vào pattern và dòng phủ định mất tác dụng.
+*.pdf
+# JTBD Playbook do BTC cấp
+!tham-khao/*.pdf
+# BÀI NỘP — sinh bằng Ctrl+P từ demo-slides.html
+!demo-slides.pdf
+# deck để cả nhóm + TA chạy lại cùng một bộ đo
+!data/slides/day03.pdf
+
+# ── Sinh ra lúc chạy, không phải mã nguồn ──
+__pycache__/
+.pytest_cache/

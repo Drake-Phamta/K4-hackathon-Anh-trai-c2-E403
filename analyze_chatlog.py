@@ -1,6 +1,16 @@
+"""Thống kê nhanh trên chatlog BTC cấp — con số vào spec.md §1 (E1…E10).
+
+    python analyze_chatlog.py
+
+Đường dẫn tính từ vị trí file này nên chạy từ đâu cũng được.
+"""
+import os
+
 import pandas as pd
 
-file_path = r'd:\VinUni\K4-hackathon-Anh-trai-c2-E403\data\vlearn-pack\chatlog\chat_history_anonymized_for_hackathon.csv'
+HERE = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(HERE, 'data', 'vlearn-pack', 'chatlog',
+                         'chat_history_anonymized_for_hackathon.csv')
 df = pd.read_csv(file_path)
 
 tutor_df = df[df['role'] == 'tutor'].copy()

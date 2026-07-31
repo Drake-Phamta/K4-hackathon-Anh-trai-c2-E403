@@ -1,14 +1,83 @@
 # Mini Hackathon AI — Batch 03
 
-**Đội thi:** Anh trai c2 (Zone Z5)
-**Danh sách thành viên & Phân công (Cập nhật lại tên thật và mã HV trước CP5):**
+**Đội thi:** Anh trai c2 (Zone Z5) · **Hướng A — VLearn** · tối ưu tính năng có sẵn
 
-- Role 1 (Mã HV: ____) — Product Owner & Spec Keeper
-- Role 2 (Mã HV: ____) — Data & Evidence
-- Role 3 (Mã HV: ____) — AI/Prompt Engineer
-- Role 4 (Mã HV: ____) — QA & Golden Set
-- Role 5 (Mã HV: ____) — UI/UX Builder
-- Role 6 (Mã HV: ____) — Demo & Validation
+> ### Lát cắt
+> **1 học viên đang xem bài giảng · bôi đen 1 đoạn và hỏi rộng · AI tự động bốc toàn bộ transcript của trang hiện tại nạp vào Context · trả về câu trả lời có trích dẫn nguyên văn từ đúng trang đó.**
+
+| Đọc gì trước | |
+|---|---|
+| **[spec.md](spec.md)** | AI Spec đầy đủ §1–§9 · quality bar đã chốt |
+| **[demo-script.md](demo-script.md)** | Kịch bản demo 5′ — bấm gì, gõ gì, ra gì |
+| **[codebase/README.md](codebase/README.md)** | Cách chạy prototype · phần nào mock, phần nào thật |
+
+## Thành viên & phân công theo lãnh thổ file
+
+⚠️ **Tên thật + mã HV: điền trước CP5.** Chia lại cho đều — **vibe-coding rule**: CP5
+bốc ngẫu nhiên một người, không giải thích được phần có tên mình thì phần đó 0 điểm.
+Câu hỏi tự soát cho từng vai: xem file tương ứng trong [reflection/](reflection/).
+
+| Vai | Tên (mã HV) | Lãnh thổ file — chịu trách nhiệm giải thích được |
+|---|---|---|
+| **P1** · Product Owner & Spec Keeper | ⚠️ TODO | `spec.md` · `README.md` |
+| **P2** · Data & Evidence | ⚠️ TODO | `eval/verify-evidence.py` · `eval/evidence-report.md` · `analyze_chatlog.py` · `extract_failed_cases.py` |
+| **P3** · AI/Prompt Engineer | ⚠️ TODO | `codebase/core.mjs` · `codebase/server.mjs` |
+| **P4** · QA & Golden Set | ⚠️ TODO | `eval/golden-set.json` · `eval/run-golden.mjs` · `codebase/test-core.mjs` · `codebase/test-intents.mjs` |
+| **P5** · UI/UX Builder | ⚠️ TODO | `codebase/prototype.html` · `codebase/ui.mjs` · `codebase/viewer.mjs` |
+| **P6** · Demo & Validation | ⚠️ TODO | `validation/` · `demo-slides.html` · `demo-script.md` |
+
+*Git history hiện có: `NguyenKyAnh-20225783` (core.mjs, prototype.html) · `Drake-Phamta` (spec.md, eval/).*
+
+## Chạy thử trong 2 phút
+
+```bash
+# 1 · web + proxy LLM (key đọc từ .env, KHÔNG xuống client)
+cd codebase && node server.mjs          # → localhost:8080/prototype.html
+curl -s localhost:8080/api/llm/health   # → {"ok":true,"model":"gemma-4"}
+
+```
+
+Mở `localhost:8080/prototype.html` → *Mở PDF* → `data/slides/day03.pdf`.
+Nhãn góc trên phải phải hiện **`AI thật (gemma-4)`**; hiện `nhân mock` nghĩa là chưa nối được LLM.
+
+## Kiểm lại mọi con số nhóm đưa ra
+
+```bash
+python eval/verify-evidence.py                        # E1..E10 → eval/evidence-report.md
+python codebase/dump-pages.py data/slides/day03.pdf ../tmp/pages.json   # ghi RA NGOÀI repo
+node codebase/test-core.mjs      ../tmp/pages.json    # 14/14 · 24/24 · 8/8
+node codebase/test-intents.mjs   ../tmp/pages.json    # 101/101 · 48/48  (lát cắt + intent + bẫy hồi quy)
+node eval/run-golden.mjs         ../tmp/pages.json --core=real --run=13  # 52/53 = 98,1%
+```
+
+## Kết quả · đối chiếu quality bar
+
+| | Cam kết (chốt 23:59 N1) | Đo được (lượt 2 — AI thật, sau vòng audit) |
+|---|---|---|
+| Tổng golden set | ≥ **90%** | **98,1%** (52/53) ✅ |
+| D1 trích dẫn cắt nguyên văn (so **toàn chuỗi**) | **100%** (điều kiện cứng) | 25/25 case có trích dẫn ✅ |
+| D3 không đòi học viên cung cấp nội dung trang | **100%** (điều kiện cứng) | 33/33 ✅ |
+| D6 neo trang ⇒ trích đúng trang neo | **100%** (điều kiện cứng) | 10/10 ✅ |
+
+*Mẫu số D1 là 25 vì từ lượt 2 chỉ đếm case thật sự có trích dẫn để kiểm (case từ chối
+không có gì để đối chiếu) — phép đo chặt hơn, không phải chất lượng tụt. Chi tiết:
+`spec.md` §7.*
+
+Một case chưa đạt (`G06` · turn `T0115`) — nguyên nhân phân tích trong [spec.md §7](spec.md).
+**Không xoá, không chỉnh test cho đẹp số.**
+
+## Cấu trúc repo
+
+```
+├── spec.md              ← AI Spec §1–§9 · quality bar
+├── demo-slides.html     ← 6 trang · Ctrl+P → demo-slides.pdf
+├── demo-script.md       ← kịch bản demo + Q&A đã chuẩn bị
+├── codebase/            ← prototype (bản Console) + proxy LLM + test
+├── eval/                ← golden set 53 case · runner · các lượt đo · trace log · script bằng chứng
+├── validation/          ← protocol + task card + feedback log (chạy sáng N2)
+├── reflection/          ← mỗi người 1 file
+└── data/                ← data pack của khoá (BTC cấp)
+```
 
 **SPEC → Prototype → Demo.** Đây không phải cuộc thi code — đây là cuộc thi **tư duy sản phẩm AI**.
 

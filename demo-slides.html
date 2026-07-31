@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nạp đúng trang đang xem vào ngữ cảnh AI tutor — Anh trai c2 · Zone Z5</title>
+<!--
+  XUẤT RA demo-slides.pdf:
+    1. Mở file này bằng Chrome/Edge
+    2. Ctrl+P  →  Đích: "Lưu thành PDF"  →  TÍCH "Đồ hoạ nền"
+       (khổ giấy @page đã đặt đúng 16:9 — KHÔNG chỉnh Bố cục/Lề gì thêm)
+    3. Lưu vào gốc repo, tên demo-slides.pdf
+
+  Luật guide §5.1: "không có bằng chứng thì không có slide" — mỗi trang phải có
+  ≥1 con số / quote có nguồn / kết quả đo mà người nghe kiểm chứng được.
+  Mọi số ở đây tái lập bằng: python eval/verify-evidence.py
+-->
+<style>
+  :root{
+    --ink:#15181d; --dim:#5d646f; --line:#d7dbe2; --bg:#fff; --sunk:#f4f6f9;
+    --ok:#0f7a52; --ok-soft:#e4f4ec; --bad:#b3312f; --bad-soft:#fdeae9;
+    --warn:#8a5a06; --warn-soft:#fdf1da; --accent:#1a4fa0; --accent-soft:#e9f0fc;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--sunk);color:var(--ink);
+    font:16px/1.5 "Inter",-apple-system,"Segoe UI",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased}
+
+  .slide{
+    width:1123px;height:632px;                 /* 16:9 — khổ in đặt đúng size này */
+    background:var(--bg);margin:22px auto;padding:44px 56px 40px;
+    position:relative;overflow:hidden;
+    box-shadow:0 3px 22px rgba(20,28,45,.13);
+    display:flex;flex-direction:column;
+  }
+  .num{position:absolute;right:24px;bottom:16px;font-size:11px;color:var(--dim);
+    font-variant-numeric:tabular-nums}
+  .kicker{font-size:11px;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--accent);font-weight:700;margin-bottom:9px}
+  h1{font-size:33px;line-height:1.16;letter-spacing:-.019em;margin-bottom:5px;font-weight:760}
+  h1 small{display:block;font-size:15px;font-weight:500;color:var(--dim);
+    letter-spacing:0;margin-top:8px;line-height:1.45}
+  h2{font-size:15.5px;font-weight:700;margin:16px 0 8px}
+
+  .cols{display:grid;gap:26px;flex:1;min-height:0}
+  .c2{grid-template-columns:1fr 1fr}
+  .c53{grid-template-columns:5fr 4fr}
+  .c35{grid-template-columns:3fr 5fr}
+
+  /* ── ô số lớn ─────────────────────────────────────────────── */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+  .stat{border:1px solid var(--line);border-radius:9px;padding:13px 15px;background:var(--sunk)}
+  .stat .v{font-size:29px;font-weight:770;letter-spacing:-.028em;line-height:1;
+    font-variant-numeric:tabular-nums}
+  .stat .k{font-size:11.5px;color:var(--dim);margin-top:6px;line-height:1.35}
+  .stat.bad .v{color:var(--bad)} .stat.ok .v{color:var(--ok)} .stat.acc .v{color:var(--accent)}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--dim);border-bottom:1.5px solid var(--line);padding:6px 8px 5px}
+  td{padding:6.5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  td.n{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:640}
+  tr.pick td{background:var(--ok-soft)}
+  tr.drop td{color:var(--dim)}
+  .tag{display:inline-block;font-size:10px;font-weight:700;padding:1.5px 7px;
+    border-radius:20px;white-space:nowrap}
+  .tag.pick{background:var(--ok);color:#fff} .tag.drop{background:var(--sunk);
+    color:var(--dim);border:1px solid var(--line)}
+
+  blockquote{border-left:3px solid var(--bad);background:var(--bad-soft);
+    padding:11px 14px;border-radius:0 7px 7px 0;font-size:13px;line-height:1.52}
+  blockquote.ok{border-color:var(--ok);background:var(--ok-soft)}
+  blockquote cite{display:block;margin-top:6px;font-size:10.5px;color:var(--dim);
+    font-style:normal;font-variant-numeric:tabular-nums}
+  blockquote b{color:var(--bad)} blockquote.ok b{color:var(--ok)}
+
+  ul{list-style:none} li{position:relative;padding-left:17px;margin-bottom:7px;font-size:13px;line-height:1.5}
+  li::before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;
+    border-radius:50%;background:var(--accent)}
+  li.x::before{background:var(--bad)} li.v::before{background:var(--ok)}
+
+  .box{border:1px solid var(--line);border-radius:9px;padding:13px 15px;background:var(--sunk)}
+  .box.acc{border-color:var(--accent);background:var(--accent-soft)}
+  .box.warn{border-color:var(--warn);background:var(--warn-soft)}
+  .box h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--dim);margin-bottom:7px;font-weight:700}
+  code{font:12.5px/1.4 ui-monospace,"Cascadia Code",Consolas,monospace;
+    background:var(--sunk);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+  .box code{background:#fff}
+
+  .flow{display:flex;align-items:stretch;gap:9px;margin:11px 0}
+  .flow .step{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px 11px;
+    background:#fff;font-size:11.5px;line-height:1.4}
+  .flow .step b{display:block;font-size:12.5px;margin-bottom:3px}
+  .flow .arrow{align-self:center;color:var(--dim);font-size:15px}
+  .flow .step.hi{border-color:var(--accent);border-width:2px;background:var(--accent-soft)}
+
+  .foot{margin-top:auto;padding-top:11px;border-top:1px solid var(--line);
+    font-size:11px;color:var(--dim);display:flex;justify-content:space-between;gap:16px}
+
+  @media print{
+    /* Khổ trang IN = đúng kích thước slide (px), không ép vào A4.
+       A4 ngang là 1,414:1 còn slide là 16:9 (1,778:1) — in vào A4 là méo
+       hoặc hụt lề. Chrome chấp nhận size tuỳ ý khi Lưu thành PDF. */
+    @page{size:1123px 632px;margin:0}
+    body{background:#fff}
+    .slide{box-shadow:none;margin:0;page-break-after:always;
+      width:1123px;height:632px}
+    .slide:last-child{page-break-after:auto}
+    .hint{display:none}
+  }
+  .hint{max-width:1123px;margin:22px auto 0;padding:13px 17px;background:#fffbe8;
+    border:1px solid #e6d9a8;border-radius:9px;font-size:13px;line-height:1.55;color:#5c4c14}
+</style>
+</head>
+<body>
+
+<div class="hint">
+  <b>Xuất PDF:</b> Ctrl+P → Đích <i>Lưu thành PDF</i> → tích <b>Đồ hoạ nền</b> (khổ giấy tự đúng 16:9,
+  không cần chỉnh) → lưu thành <code>demo-slides.pdf</code> ở gốc repo.
+  Khung vàng này tự ẩn khi in.
+</div>
+
+<!-- ═══════════════════ 1 · USER & JOB ═══════════════════ -->
+<section class="slide">
+  <div class="kicker">1 · User &amp; Job — 45″</div>
+  <h1>Học viên đang mở đúng trang đó. Tutor thì chưa từng đọc nó.
+    <small>Job: hiểu ngay nội dung trang slide đang xem, và kiểm chứng được câu trả lời bằng chính chữ trên trang.</small>
+  </h1>
+
+  <div class="stats">
+    <div class="stat bad"><div class="v">24,3%</div><div class="k">lượt trả lời của tutor là một lời từ chối<br>307/1.261 · <code>E2</code></div></div>
+    <div class="stat acc"><div class="v">99,3%</div><div class="k">tin nhắn có kèm số trang đang xem<br>1.252/1.261 · <code>E5</code></div></div>
+    <div class="stat bad"><div class="v">61,2%</div><div class="k">trong đó “đoạn được chọn” <b>chính là câu hỏi</b> — tutor không nhận được chữ nào trên slide · <code>E6</code></div></div>
+  </div>
+
+  <div class="cols c2">
+    <div>
+      <h2>Pain, bằng chữ của học viên</h2>
+      <blockquote>
+        “Xin lỗi bạn, tôi không tìm thấy nội dung cụ thể cho <b>slide 37</b>…
+        Bạn có thể <b>cung cấp thêm thông tin hoặc tiêu đề của slide đó</b>…”
+        <cite>tutor · turn T0649 — trong khi học viên ĐANG MỞ trang 37</cite>
+      </blockquote>
+      <blockquote style="margin-top:9px">
+        “Rất tiếc, tôi <b>không tìm thấy định nghĩa chi tiết về “ReAct”</b> trong các slide bài giảng hiện tại…”
+        <cite>tutor · turn T0811 — ReAct là TÊN của cả buổi học Ngày 3</cite>
+      </blockquote>
+    </div>
+    <div>
+      <h2>Không phải cảm nhận — pain này gây bất mãn đo được</h2>
+      <ul>
+        <li class="x">Downvote <b>trong</b> nhóm lỗi này: <b>6,8%</b> · ngoài nhóm: <b>1,7%</b> → <b>chênh 4,1 lần</b> <code>E4</code></li>
+        <li class="x"><b>0/1.261</b> lượt tutor đưa bước tiếp theo → 307 lần từ chối là <b>307 ngõ cụt</b> <code>E9</code></li>
+        <li class="v"><b>30,6%</b> nhóm lỗi là câu hỏi <b>neo vào trang đang xem</b> → sửa được <i>đảm bảo</i> bằng text trang <code>E10</code></li>
+      </ul>
+      <div class="box" style="margin-top:11px">
+        <h3>Kiểm lại mọi con số bằng một lệnh</h3>
+        <code>python eval/verify-evidence.py</code> → <code>eval/evidence-report.md</code>,
+        mỗi mã <code>E#</code> là một mục.
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>n = 1.261 lượt tutor · 585 hội thoại · 369 người học</span><span>Anh trai c2 · Zone Z5</span></div>
+  <div class="num">1 / 6</div>
+</section>
+
+<!-- ═══════════════════ 2 · VÌ SAO CHỌN ═══════════════════ -->
+<section class="slide">
+  <div class="kicker">2 · Vì sao chọn tính năng này — 45″</div>
+  <h1>Ba ứng viên, cùng một tập dữ liệu, cùng một script đếm
+    <small>Chọn nguyên nhân, không chọn hệ quả. Loại bằng số, không loại vì thấy khó.</small>
+  </h1>
+
+  <table style="margin-top:6px">
+    <thead><tr><th style="width:27%">Ứng viên</th><th style="width:15%">Bao nhiêu người × tần suất</th>
+      <th style="width:26%">Tốn gì mỗi lần</th><th style="width:22%">Lý do quyết định</th><th style="width:10%"></th></tr></thead>
+    <tbody>
+      <tr class="pick">
+        <td><b>A · Nạp text trang đang xem vào ngữ cảnh</b></td>
+        <td class="n">369 người<br>24,3% lượt hỏi</td>
+        <td>Mất mạch học, phải tự đi tìm lại. 30,6% trong đó sửa được <i>đảm bảo</i></td>
+        <td>Downvote cao <b>gấp 4,1 lần</b>. <code>page_text</code> đã có trong hợp đồng, chỉ chưa được dùng</td>
+        <td><span class="tag pick">CHỌN</span></td>
+      </tr>
+      <tr class="drop">
+        <td>B · Buộc mọi câu trả lời phải có trích dẫn</td>
+        <td class="n">46,2% lượt<br>582/1.261</td>
+        <td>Không kiểm chứng được — nhưng vẫn <i>có</i> câu trả lời dùng được</td>
+        <td>Là <b>hệ quả</b> của A. Không thể trích dẫn một trang mô hình chưa từng đọc. Sửa A thì B tự khỏi</td>
+        <td><span class="tag drop">loại</span></td>
+      </tr>
+      <tr class="drop">
+        <td>C · Giảm độ trễ trả lời</td>
+        <td class="n">0,2% lượt<br>3/1.261</td>
+        <td>Chờ lâu, sốt ruột</td>
+        <td>Trung vị chỉ <b>1.758ms</b>, p90 <b>3.686ms</b> — <b>không có pain để sửa</b></td>
+        <td><span class="tag drop">loại</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="cols c2" style="margin-top:15px;flex:0">
+    <div class="box acc">
+      <h3>Chọn A vì sửa được nguyên nhân</h3>
+      Sau khi sửa A, <b>33/33</b> câu trả lời có <code>decision='answer'</code> đều kèm ≥1 trích dẫn
+      nguyên văn — tức B tự đạt mà không phải build riêng.
+    </div>
+    <div class="box warn">
+      <h3>Không tuyên bố sửa hết 24,3%</h3>
+      <b>30,6%</b> (94/307) neo trang → grounding đảm bảo bằng cấu trúc.
+      <b>69,4%</b> còn lại hỏi nội dung → được lợi, nhưng tài liệu không chứa thì
+      <b>vẫn phải từ chối</b> — và đó là hành vi đúng.
+    </div>
+  </div>
+  <div class="foot"><span>Chi tiết: <code>spec.md</code> §2</span><span>2 / 6</span></div>
+</section>
+
+<!-- ═══════════════════ 3 · GIẢI PHÁP & DEMO ═══════════════════ -->
+<section class="slide">
+  <div class="kicker">3 · Giải pháp &amp; demo live — 2′</div>
+  <h1>Trang đang xem là nguồn sự thật — nhưng cổng chống bịa vẫn thắng
+    <small><b>Lát cắt:</b> 1 học viên đang xem bài giảng · bôi đen 1 đoạn và hỏi rộng · AI tự bốc toàn bộ transcript trang hiện tại nạp vào ngữ cảnh · trả lời kèm trích dẫn nguyên văn từ đúng trang đó.</small>
+  </h1>
+
+  <div class="flow">
+    <div class="step"><b>① Chốt tất định</b>ngoài phạm vi · tiền đề sai — chặn bằng luật, <b>không gọi LLM</b></div>
+    <div class="arrow">→</div>
+    <div class="step hi"><b>② Cổng chống bịa</b>trọng tâm câu hỏi vắng mặt khỏi <i>toàn</i> tài liệu → từ chối. <b>Chạy TRƯỚC bước ③</b></div>
+    <div class="arrow">→</div>
+    <div class="step hi"><b>③ Neo trang</b>câu hỏi thuần phạm vi → trả lời từ <b>toàn bộ text trang</b></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>④ Kiểm trích dẫn</b>quote không cắt nguyên văn từ trang đó → <b>bỏ</b></div>
+  </div>
+
+  <div class="cols c53" style="margin-top:6px">
+    <div>
+      <h2>Demo live · 1 case chuẩn + 1 case chỗ khó</h2>
+      <ul>
+        <li class="v"><b>Case chuẩn</b> — mở Tr.37, không bôi đen, gõ đúng câu <code>T0649</code>:
+          <i>“tóm tắt nội dung chính trong slide này”</i> → trả lời kèm <b>trích dẫn Tr.37</b> bấm được.
+          <b>Đây đúng câu tutor cũ từ chối.</b></li>
+        <li class="x"><b>Case chỗ khó</b> — <i>“LangGraph có hỗ trợ streaming không?”</i> → nói thẳng
+          <code>có: langgraph · không có: streaming</code>, tin cậy <b>8%</b>.
+          Rồi <b>bôi đen một đoạn và hỏi lại</b> → <b>vẫn từ chối</b>.</li>
+      </ul>
+      <div class="box warn" style="margin-top:9px">
+        <h3>Vì sao thứ tự ②→③ là chỗ mấu chốt</h3>
+        Nếu “có bôi đen” là đủ để đi đường <code>page_text</code>, thì bôi đen bất kỳ đoạn nào
+        rồi hỏi về <code>streaming</code> sẽ ra câu trả lời <b>bịa mà nghe rất có lý</b>.
+        Case <code>G30</code> trong golden set canh đúng đường lọt này.
+      </div>
+    </div>
+    <div>
+      <h2>Automation: <b>Conditional</b> — theo cost-of-error</h2>
+      <ul>
+        <li class="v"><b>Kẹp text trang</b> → tự động. Sai thì <b>rẻ</b>: học viên đang mở đúng trang, đọc là thấy lệch. Không kẹp thì chắc chắn 100% từ chối.</li>
+        <li class="x"><b>Trả lời khi thiếu căn cứ</b> → không tự động. Sai thì <b>đắt</b>: học sai mà không có cách nào biết.</li>
+        <li class="v"><b>Bước ra ngoài tài liệu</b> → <b>người mở, không phải AI</b>. Nhánh thứ 5 <code>outside_document</code>: 0 trích dẫn, tin cậy ≤45%, chỉ chạy khi bấm chip.</li>
+      </ul>
+      <div class="box acc" style="margin-top:9px">
+        <h3>Ba loại lỗi, ba đường lui khác nhau</h3>
+        tài liệu không chứa · trang không đọc được (PDF scan) · ngoài thẩm quyền
+        — mỗi loại một câu trả lời riêng, <b>không gộp</b>.
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>AI thật: gemma-4 qua proxy <code>codebase/server.mjs</code> · key không xuống client</span><span>3 / 6</span></div>
+</section>
+
+<!-- ═══════════════════ 4 · KẾT QUẢ ĐO ═══════════════════ -->
+<section class="slide">
+  <div class="kicker">4 · Kết quả đo — 45″</div>
+  <h1>98,1% qua bộ — bar đã cam kết là 90%
+    <small>Quality bar chốt trong <code>spec.md</code> lúc 23:59 N1 và giữ nguyên sau đó.</small>
+  </h1>
+
+  <div class="stats" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat ok"><div class="v">52/53</div><div class="k"><b>98,1%</b> qua golden set<br>bar cam kết ≥ 90% → <b>ĐẠT</b></div></div>
+    <div class="stat ok"><div class="v">40/40</div><div class="k"><b>D1</b> trích dẫn khớp <b>toàn chuỗi</b> nguyên văn<br>(mẫu số = case có trích dẫn) → 100%, đạt điều kiện cứng</div></div>
+    <div class="stat ok"><div class="v">53/53</div><div class="k"><b>D3</b> không câu nào đòi học viên cung cấp nội dung trang</div></div>
+    <div class="stat ok"><div class="v">10/10</div><div class="k"><b>D6</b> neo trang ⇒ trích đúng trang đã neo</div></div>
+  </div>
+
+  <div class="cols c53">
+    <div>
+      <h2>Bar không phải con số vừa đo được</h2>
+      <div class="box acc">
+        <h3>Cam kết</h3>
+        <b>Đạt khi ≥ 90% qua bộ, VÀ đủ ba điều kiện cứng: D1 = D3 = D6 = 100%.</b>
+        <div style="margin-top:7px;font-size:12px;color:var(--dim);line-height:1.5">
+          Ba điều kiện ở 100% có chủ đích — chúng là <b>lời hứa của sản phẩm</b>, không phải
+          chỉ tiêu để thương lượng. Bịa một trích dẫn là mất sạch giá trị “kiểm chứng được”;
+          nói câu “bạn cung cấp nội dung trang” là quay về đúng pain gốc.
+        </div>
+      </div>
+      <table style="margin-top:11px">
+        <thead><tr><th>Lượt</th><th>Nhân</th><th>Tổng</th><th>D1</th><th>Bar</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>mock (để so)</td><td class="n">93,9%</td><td class="n">33/33</td><td>—</td></tr>
+          <tr><td>1</td><td>real · gemma-4</td><td class="n">97,0%</td><td class="n">33/33</td><td>✅ đạt</td></tr>
+          <tr><td>2</td><td>real · sau audit, phép đo D1 siết chặt</td><td class="n">97,0%</td><td class="n">25/25</td><td>✅ đạt</td></tr>
+          <tr><td>9</td><td>real · bỏ voice, gộp bộ định tuyến, golden set 33 → 48 case</td><td class="n">97,9%</td><td class="n">37/37</td><td>✅ đạt</td></tr>
+          <tr class="pick"><td><b>13</b></td><td><b>real · vá &ldquo;gọi tên trang&rdquo; + &ldquo;xin quiz&rdquo; · bịt điểm mù của chính bộ đo (48 → 53 case)</b></td><td class="n"><b>98,1%</b></td><td class="n">40/40</td><td><b>✅ đạt</b></td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:11.5px;color:var(--dim);margin-top:7px">
+        Sau vòng audit, D1 chấm bằng phép so <b>toàn chuỗi</b> (chặt hơn) và mẫu số chỉ đếm
+        case có trích dẫn — kết quả vẫn 100%. Bộ đo được siết mà con số đứng vững.
+      </div>
+    </div>
+    <div>
+      <h2>Failure đáng kể nhất — <b>ghi nhận, không giấu</b></h2>
+      <div class="box">
+        <h3>G06 · turn <code>T0115</code> · “điêu toa”</h3>
+        Mong đợi <code>no_grounding</code>, nhận <code>answer</code>.
+        <div style="margin-top:8px;font-size:12px;line-height:1.5">
+          <b>Nguyên nhân:</b> cổng chống bịa chỉ áp cho token <b>không phải âm tiết tiếng Việt</b> —
+          ràng buộc này cần thiết, bỏ nó ra thì học viên gõ không dấu (“khai niem”, case G27)
+          bị từ chối oan. “điêu toa” toàn âm tiết tiếng Việt nên được miễn, rồi retrieval
+          khớp <code>dieu</code> với chữ “điều” trong slide.
+        </div>
+        <div style="margin-top:8px;font-size:12px;line-height:1.5">
+          <b>Không sửa được bằng ngưỡng điểm — đã đo:</b> <code>"abc def ghi"</code> ăn
+          <b>3,81</b> điểm (vì <code>def</code> có trong code Python Tr.33, <code>ghi</code> là từ
+          tiếng Việt thật), còn <code>"điêu toa"</code> chỉ <b>2,75</b>. Không ngưỡng nào tách được
+          câu vô nghĩa khỏi câu hợp lệ như <i>“bộ nhớ ngắn hạn là gì”</i>.
+        </div>
+        <div style="margin-top:8px;font-size:12px"><b>→ Cần embedding. Đã vào backlog (slide 6).</b></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Bảng đủ 53 case kể cả case chưa đạt: <code>eval/results-run13.md</code> · trace: <code>eval/trace-log-run13.json</code></span><span>4 / 6</span></div>
+</section>
+
+<!-- ═══════════════════ 5 · USER THẬT NÓI GÌ ═══════════════════ -->
+<section class="slide">
+  <div class="kicker">5 · User thật nói gì — 45″</div>
+  <h1>Vòng validation · 5 người ngoài nhóm
+    <small>Protocol: giao task thật → im lặng quan sát → hỏi đúng 3 câu → log nguyên văn. <code>validation/README.md</code></small>
+  </h1>
+
+  <div class="box warn" style="margin-bottom:13px">
+    <h3>⚠️ Điền trước CP6</h3>
+    Slide này để trống có chủ đích cho tới khi chạy xong vòng validation sáng N2.
+    Điền <b>≥2 quote nguyên văn kèm tên/vai</b> + thay đổi đã làm. Nguồn:
+    <code>validation/feedback-log.md</code>. <b>Không dán lời khen chung chung</b> — rubric
+    R6 chấm quote nguyên văn có tên.
+  </div>
+
+  <div class="cols c2">
+    <div>
+      <h2>Quote nguyên văn</h2>
+      <blockquote class="ok">“⚠️ TODO — chép đúng chữ người thử nói”<cite>— tên / vai · willing user từ CP1</cite></blockquote>
+      <blockquote style="margin-top:9px">“⚠️ TODO — ưu tiên quote phàn nàn, không phải quote khen”<cite>— tên / vai</cite></blockquote>
+    </div>
+    <div>
+      <h2>Bốn câu hỏi vòng test phải trả lời được</h2>
+      <table>
+        <thead><tr><th>Câu hỏi</th><th style="width:16%">/5</th></tr></thead>
+        <tbody>
+          <tr><td>Có bấm chip trích dẫn để tự đối chiếu slide không?</td><td class="n">__ / 5</td></tr>
+          <tr><td>Phân biệt được “có căn cứ” với “ngoài tài liệu ⚠️”?</td><td class="n">__ / 5</td></tr>
+          <tr><td>Bị từ chối → thấy <b>đáng tin hơn</b> hay <b>vô dụng hơn</b>?</td><td class="n">__ / __</td></tr>
+          <tr><td>Tự tìm thấy chip hành động (ngoài tài liệu / chuyển TA)?</td><td class="n">__ / 5</td></tr>
+        </tbody>
+      </table>
+      <div class="box" style="margin-top:11px">
+        <h3>Thay đổi đã làm từ feedback</h3>
+        ⚠️ TODO → ghi vào <code>spec.md</code> §9 Changelog.
+        Giữ nguyên có lý do căn cứ cũng tính đủ điểm — không sửa vội thứ chưa hiểu rõ.
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Câu hỏi thứ ba là đánh cược lớn nhất của cả thiết kế: từ chối có làm tăng niềm tin không?</span><span>5 / 6</span></div>
+</section>
+
+<!-- ═══════════════════ 6 · NẾU CÓ THÊM 1 TUẦN ═══════════════════ -->
+<section class="slide">
+  <div class="kicker">6 · Nếu có thêm 1 tuần — 30″</div>
+  <h1>Ba việc, mỗi việc trỏ về một failure cụ thể
+    <small>Không phải roadmap — là danh sách nợ đã biết tên.</small>
+  </h1>
+
+  <div class="cols" style="grid-template-columns:repeat(3,1fr);flex:0;margin-top:8px">
+    <div class="box">
+      <h3>1 · Embedding cho phép phủ định</h3>
+      <div style="font-size:12.5px;line-height:1.5">
+        Trỏ về <b>G06 <code>T0115</code></b> — case duy nhất chưa đạt. Keyword + idf không tách
+        được câu vô nghĩa khỏi câu hợp lệ khi cả hai đều là âm tiết tiếng Việt.
+        <b>Đo được:</b> <code>"abc def ghi"</code> = 3,81đ &gt; <code>"điêu toa"</code> = 2,75đ.
+      </div>
+    </div>
+    <div class="box">
+      <h3>2 · Nối TA thật</h3>
+      <div style="font-size:12.5px;line-height:1.5">
+        Trỏ về <b>E9: 0/1.261</b> lượt tutor cũ đưa bước tiếp. Chip “Chuyển cho TA” hiện
+        dựng đủ tin nhắn (trang + đoạn bôi đen + lý do tutor bí) rồi <b>copy clipboard</b> —
+        còn thiếu đúng một bước: đẩy vào Discord khoá.
+      </div>
+    </div>
+    <div class="box">
+      <h3>3 · Đo trên nhiều deck</h3>
+      <div style="font-size:12.5px;line-height:1.5">
+        Golden set hiện neo vào <b>một deck</b> (day03, 44 trang). Số 98,1% chỉ chắc trên deck này.
+        Cần chạy lại trên 6 transcript còn lại trước khi dám nói con số này là chất lượng sản phẩm.
+      </div>
+    </div>
+  </div>
+
+  <div class="cols c35" style="margin-top:15px">
+    <div class="box acc">
+      <h3>Bài học lớn nhất</h3>
+      <div style="font-size:13.5px;line-height:1.55">
+        Nhóm viết trong spec rằng <i>“AI tự động bốc toàn bộ transcript của trang hiện tại nạp vào
+        Context”</i> — rồi phát hiện <b>đoạn code đó chưa từng tồn tại</b>. <code>page_text</code>
+        được nhận vào và bỏ đó; mọi câu trả lời vẫn đi tra keyword như tutor cũ.
+        <div style="margin-top:8px">
+          Chạy 6 dạng câu hỏi gây pain nhiều nhất qua lõi lúc đó: <b>4/6 ra <code>no_grounding</code></b>.
+          <b>Prototype đang tái tạo đúng thất bại mà nó đi sửa</b>, chỉ khác là câu từ chối lịch sự hơn.
+        </div>
+        <div style="margin-top:8px;font-weight:640">
+          Viết spec xong không có nghĩa là đã làm. Thứ bắt được nó không phải code review —
+          mà là chạy <b>câu hỏi nguyên văn của người thật</b> qua hệ thống.
+        </div>
+      </div>
+    </div>
+    <div>
+      <h2>Ba bug cùng họ, tìm ra theo cùng một cách</h2>
+      <ul>
+        <li class="x"><b>Chip hứa suông</b> — “Chuyển câu này cho TA” bị gửi làm <i>câu hỏi mới</i>. Nút trông như hành động mà không làm gì thì tệ hơn không có nút.</li>
+        <li class="x"><b>Sai trang hiện tại</b> — nhảy tới Tr.37 rồi hỏi “tóm tắt trang này” thì tutor tóm tắt <b>Tr.38</b>. Slide 16:9 thấp hơn viewport nên vạch đọc 35% rơi sang trang sau. Vô hại khi trang chỉ là con số hiển thị — thành lỗi trả lời sai khi nó là nguồn sự thật.</li>
+        <li class="x"><b>Số evidence không tái lập được</b> — 68,0% và 54% ghi trong hợp đồng, đếm chặt lại ra 61,2% và 57%. Giờ phương pháp nằm trong script, không nằm trong đầu người viết.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Toàn bộ 9 thay đổi đêm N1 kèm lý do: <code>spec.md</code> §9 Changelog</span><span>6 / 6</span></div>
+</section>
+
+</body>
+</html>
