@@ -13,7 +13,13 @@ import { introSequence, micLevel, pinSettle, themeMorph, turnEnter, wireDraw } f
 type Variant = 'doc' | 'wild';
 const STARTERS = ['Tóm tắt trang mình đang xem', 'Tài liệu này gồm những phần nào?', 'LangGraph có hỗ trợ streaming không?'];
 
-export function TutorWorkspace({ variant }: { variant: Variant }) {
+export function TutorWorkspace({
+  variant,
+  voiceProbe = false,
+}: {
+  variant: Variant;
+  voiceProbe?: boolean;
+}) {
   const rootRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -23,8 +29,24 @@ export function TutorWorkspace({ variant }: { variant: Variant }) {
   const [question, setQuestion] = useState('');
   const [toast, setToast] = useState('');
   const [recording, setRecording] = useState(false);
+  const [micBusy, setMicBusy] = useState(false);
+  const holdingMicRef = useRef(false);
+  const recordingMicRef = useRef(false);
+  const finishingMicRef = useRef(false);
+  const [voiceThinking, setVoiceThinking] = useState(false);
+  const [lastTranscript, setLastTranscript] = useState('');
+  const [conversationError, setConversationError] = useState('');
+  const conversationActiveRef = useRef(false);
+  const conversationBusyRef = useRef(false);
+  const conversationPendingRef = useRef<string | null>(null);
+  const conversationGenerationRef = useRef(0);
   const tutor = useTutor();
   const voice = useVoice();
+  const {
+    speak: speakVoice,
+    startConversation: startVoiceConversation,
+    stopConversation: stopVoiceConversation,
+  } = voice;
   const {
     containerRef, getApi, page, total, ready, load, goTo, settled,
     highlight, setZoom, fitWidth, anchorOf, pageText, thumb,
@@ -65,27 +87,145 @@ export function TutorWorkspace({ variant }: { variant: Variant }) {
     await load(new Uint8Array(await file.arrayBuffer()), file.name);
   }, [load]);
 
-  const send = useCallback(async (text?: string, override?: Selection) => {
+  const send = useCallback(async (
+    text?: string,
+    override?: Selection,
+    source: 'text' | 'voice' = 'text',
+  ) => {
     const q = (text ?? question).trim();
     const api = getApi();
-    if (!q || !api || !total) return;
+    if (!q || !api || !total) return null;
     setQuestion('');
     setSelection(null);
-    await tutor.ask({ question: q, selection: override === undefined ? selection : override, viewer: api, docName });
+    return tutor.ask({
+      question: q,
+      selection: override === undefined ? selection : override,
+      viewer: api,
+      docName,
+      source,
+    });
   }, [question, getApi, total, tutor, selection, docName]);
+  const sendRef = useRef(send);
+  useEffect(() => { sendRef.current = send; }, [send]);
 
-  const onMic = async () => {
-    if (recording) {
-      setRecording(false);
-      const wav = await voice.stop();
-      if (!wav) return setToast('Không nghe rõ — thử lại');
-      try { await send((await voice.transcribe(wav)).trim(), null); }
-      catch { setToast('Nhận diện giọng nói lỗi'); }
+  const onConversationUtterance = useCallback((raw: string) => {
+    const text = raw.trim();
+    if (!text || !conversationActiveRef.current) return;
+    if (conversationBusyRef.current) {
+      conversationPendingRef.current = text;
       return;
     }
-    try { await voice.start(); setRecording(true); }
-    catch { setToast('Không có quyền micro'); }
-  };
+    const generation = conversationGenerationRef.current;
+    const run = async (first: string) => {
+      let current: string | null = first;
+      conversationBusyRef.current = true;
+      while (current && conversationActiveRef.current
+        && generation === conversationGenerationRef.current) {
+        setLastTranscript(current);
+        setConversationError('');
+        setVoiceThinking(true);
+        const result = await sendRef.current(current, undefined, 'voice');
+        setVoiceThinking(false);
+        if (!conversationActiveRef.current
+          || generation !== conversationGenerationRef.current) break;
+        if (result?.res?.answer) {
+          try {
+            await speakVoice(result.res.answer);
+          } catch {
+            setConversationError('TTS lỗi — hội thoại vẫn tiếp tục nghe');
+          }
+        }
+        current = conversationPendingRef.current;
+        conversationPendingRef.current = null;
+      }
+      if (generation === conversationGenerationRef.current) {
+        conversationBusyRef.current = false;
+      }
+    };
+    void run(text);
+  }, [speakVoice]);
+
+  const stopConversation = useCallback(() => {
+    conversationGenerationRef.current++;
+    conversationActiveRef.current = false;
+    conversationBusyRef.current = false;
+    conversationPendingRef.current = null;
+    setVoiceThinking(false);
+    stopVoiceConversation();
+  }, [stopVoiceConversation]);
+
+  const toggleConversation = useCallback(async () => {
+    if (voice.conversing) {
+      stopConversation();
+      return;
+    }
+    if (!total || voice.healthy !== true) return;
+    conversationGenerationRef.current++;
+    conversationActiveRef.current = true;
+    conversationPendingRef.current = null;
+    setConversationError('');
+    try {
+      await startVoiceConversation({
+        onUtterance: onConversationUtterance,
+        onError: () => setConversationError('STT lỗi — hội thoại vẫn tiếp tục nghe'),
+      });
+    } catch {
+      conversationActiveRef.current = false;
+      setConversationError('Không mở được micro — kiểm tra quyền trình duyệt');
+    }
+  }, [
+    voice.conversing, voice.healthy, startVoiceConversation,
+    stopConversation, total, onConversationUtterance,
+  ]);
+
+  useEffect(() => () => {
+    conversationGenerationRef.current++;
+    conversationActiveRef.current = false;
+    conversationPendingRef.current = null;
+  }, []);
+
+  const finishPushToTalk = useCallback(async () => {
+    holdingMicRef.current = false;
+    if (!recordingMicRef.current || finishingMicRef.current) return;
+    recordingMicRef.current = false;
+    finishingMicRef.current = true;
+    setRecording(false);
+    setMicBusy(true);
+    try {
+      const wav = await voice.stop();
+      if (!wav) return setToast('Không nghe rõ — thử lại');
+      const text = (await voice.transcribe(wav)).trim();
+      if (!text) return setToast('Không nghe rõ — thử lại');
+      await send(text, null, 'voice');
+    } catch {
+      setToast('Nhận diện giọng nói lỗi');
+    } finally {
+      finishingMicRef.current = false;
+      setMicBusy(false);
+    }
+  }, [send, voice]);
+
+  const beginPushToTalk = useCallback(async () => {
+    if (
+      holdingMicRef.current
+      || finishingMicRef.current
+      || !total
+      || voice.healthy !== true
+      || voice.conversing
+    ) return;
+    holdingMicRef.current = true;
+    try {
+      await voice.start();
+      recordingMicRef.current = true;
+      setRecording(true);
+      if (!holdingMicRef.current) await finishPushToTalk();
+    } catch {
+      holdingMicRef.current = false;
+      recordingMicRef.current = false;
+      setRecording(false);
+      setToast('Không có quyền micro');
+    }
+  }, [finishPushToTalk, total, voice]);
 
   const changeTheme = async () => {
     const { initTheme } = await import('@/lib/ui.mjs');
@@ -99,6 +239,16 @@ export function TutorWorkspace({ variant }: { variant: Variant }) {
     onFill: (v: string) => { setQuestion(v); inputRef.current?.focus(); },
     traceOpen: false,
   };
+  const lastVoiceTurn = useMemo(
+    () => [...tutor.turns].reverse().find(turn => turn.source === 'voice'),
+    [tutor.turns],
+  );
+  const conversationPhase: ConversationPhase = !voice.conversing ? 'off'
+    : voice.hearing ? 'hearing'
+      : voice.transcribing ? 'transcribing'
+        : voiceThinking ? 'thinking'
+          : voice.speaking ? 'speaking'
+            : 'listening';
 
   return (
     <div ref={rootRef} className={`${s.workspace} ${s[variant]}`} data-variant={variant}>
@@ -146,6 +296,19 @@ export function TutorWorkspace({ variant }: { variant: Variant }) {
         ) : (
           <WildPins turns={tutor.turns} props={props} rootRef={rootRef} />
         )}
+        {variant === 'wild' && voiceProbe && (
+          <VoiceProbe
+            phase={conversationPhase}
+            level={voice.level}
+            transcript={lastTranscript}
+            turn={lastVoiceTurn}
+            error={conversationError}
+            healthy={voice.healthy}
+            ready={total > 0}
+            onToggle={() => void toggleConversation()}
+            onCitation={(citation) => highlight(citation.page, citation.quote)}
+          />
+        )}
       </main>
 
       <section className={s.composer} data-motion="intro">
@@ -158,9 +321,41 @@ export function TutorWorkspace({ variant }: { variant: Variant }) {
             onChange={e => setQuestion(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }}
             placeholder={variant === 'doc' ? 'Hỏi về trang đang đọc…' : 'Bôi đen một đoạn rồi đặt câu hỏi…'} />
-          <button ref={micRef} disabled={!total || voice.healthy !== true} onClick={onMic}
-            title={voice.healthy ? 'Bấm–nói–bấm' : 'Dịch vụ giọng nói không kết nối được'}>
-            {recording ? `Dừng ${voice.seconds}s` : 'Nói'}
+          <button
+            ref={micRef}
+            className={`${s.pushToTalk} ${recording ? s.listening : ''}`}
+            data-testid="push-to-talk"
+            disabled={!total || voice.healthy !== true || voice.conversing || micBusy}
+            aria-label={recording ? 'Đang nghe, thả để gửi' : 'Nhấn giữ để nói'}
+            aria-pressed={recording}
+            title={voice.healthy ? 'Nhấn giữ để nói · thả để gửi' : 'Dịch vụ giọng nói không kết nối được'}
+            onPointerDown={e => {
+              if (!e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+              e.preventDefault();
+              e.currentTarget.setPointerCapture(e.pointerId);
+              void beginPushToTalk();
+            }}
+            onPointerUp={e => {
+              e.preventDefault();
+              void finishPushToTalk();
+            }}
+            onPointerCancel={() => void finishPushToTalk()}
+            onKeyDown={e => {
+              if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+                e.preventDefault();
+                void beginPushToTalk();
+              }
+            }}
+            onKeyUp={e => {
+              if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                void finishPushToTalk();
+              }
+            }}
+          >
+            {recording
+              ? `Đang nghe ${voice.seconds}s · thả để gửi`
+              : micBusy ? 'Đang nhận giọng…' : 'Giữ để nói'}
           </button>
           <button className={s.primary} disabled={!total || !question.trim()} onClick={() => void send()}>Gửi</button>
         </div>
@@ -169,6 +364,99 @@ export function TutorWorkspace({ variant }: { variant: Variant }) {
         onChange={e => { const file = e.target.files?.[0]; if (file) void loadFile(file); }} />
       <div className={`${s.toast} ${toast ? s.show : ''}`}>{toast}</div>
     </div>
+  );
+}
+
+type ConversationPhase =
+  | 'off'
+  | 'listening'
+  | 'hearing'
+  | 'transcribing'
+  | 'thinking'
+  | 'speaking';
+
+const PHASE_LABEL: Record<ConversationPhase, string> = {
+  off: 'Đã tắt',
+  listening: 'Đang nghe',
+  hearing: 'Đang nghe bạn nói',
+  transcribing: 'Đang nhận dạng',
+  thinking: 'Đang đối chiếu với slide',
+  speaking: 'Đang trả lời',
+};
+
+function VoiceProbe({
+  phase,
+  level,
+  transcript,
+  turn,
+  error,
+  healthy,
+  ready,
+  onToggle,
+  onCitation,
+}: {
+  phase: ConversationPhase;
+  level: number;
+  transcript: string;
+  turn?: Turn;
+  error: string;
+  healthy: boolean | null;
+  ready: boolean;
+  onToggle: () => void;
+  onCitation: (citation: NonNullable<Turn['res']>['citations'][number]) => void;
+}) {
+  const active = phase !== 'off';
+  const disabled = !active && (!ready || healthy !== true);
+  const healthLabel = healthy === null ? 'đang dò voice'
+    : healthy ? 'voice online' : 'voice offline';
+  return (
+    <aside className={s.voiceProbe} data-testid="voice-probe" data-phase={phase}>
+      <header className={s.probeHead}>
+        <div>
+          <small>realtime voice probe · {healthLabel}</small>
+          <strong data-testid="conversation-phase" role="status" aria-live="polite">
+            {PHASE_LABEL[phase]}
+          </strong>
+        </div>
+        <button
+          data-testid="conversation-toggle"
+          className={active ? s.probeStop : s.primary}
+          disabled={disabled}
+          onClick={onToggle}
+        >
+          {active ? 'Tắt hội thoại' : 'Bật hội thoại'}
+        </button>
+      </header>
+
+      <label className={s.level}>
+        <span>RMS micro</span>
+        <progress data-testid="voice-level" max={1} value={level} />
+      </label>
+
+      <div className={s.probeBody}>
+        <span>Transcript gần nhất</span>
+        <p data-testid="voice-transcript">
+          {transcript || (active ? 'Nói tự nhiên, ngừng khoảng một giây để gửi.' : 'Chưa có câu nói.')}
+        </p>
+      </div>
+
+      {turn?.res && (
+        <div className={s.probeResult}>
+          <span data-testid="probe-decision">{turn.res.decision} · {Math.round(turn.res.confidence * 100)}%</span>
+          {turn.res.citations?.[0] && (
+            <button
+              data-testid="probe-citation"
+              onClick={() => onCitation(turn.res!.citations[0])}
+            >
+              Trang {turn.res.citations[0].ref}
+            </button>
+          )}
+        </div>
+      )}
+
+      {error && <p className={s.probeError} role="alert">{error}</p>}
+      <small className={s.probeHint}>Nói chen khi máy đang đọc để kiểm barge-in. Ô nhập bên dưới vẫn dùng được.</small>
+    </aside>
   );
 }
 

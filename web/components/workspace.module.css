@@ -56,6 +56,14 @@
   flex: 1; resize: none; min-height: 2.45rem; max-height: 8rem; padding: .62rem .72rem;
   border: 0; background: transparent; outline: 0; line-height: 1.5;
 }
+.pushToTalk {
+  min-width: 7.4rem; touch-action: none; user-select: none; white-space: nowrap;
+  font-size: .78rem !important;
+}
+.pushToTalk.listening {
+  color: #fff; border-color: #c83a32; background: #c83a32;
+  box-shadow: 0 0 0 .28rem color-mix(in srgb, #c83a32 18%, transparent);
+}
 .selection { color: var(--dim); font-size: .75rem; padding: .25rem .55rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .starters { display: flex; gap: .35rem; overflow-x: auto; padding: 0 .15rem .45rem; }
 .starters button { flex: 0 0 auto; font-size: .72rem; }
@@ -69,6 +77,31 @@
 .pinClose { position: absolute; top: .35rem; right: .35rem; z-index: 3; border: 0 !important; background: transparent !important; }
 .wires { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; }
 .wires path { fill: none; stroke: var(--accent); stroke-width: 1.5; opacity: .55; }
+.voiceProbe {
+  position: absolute; z-index: 12; top: 3.55rem; right: 1rem;
+  width: min(22rem, calc(27vw - 2rem)); min-width: 18rem;
+  padding: .85rem; border: 1px solid var(--line); border-radius: 1rem;
+  background: var(--panel); box-shadow: 0 .9rem 2.4rem color-mix(in srgb, var(--bg) 76%, transparent);
+  display: grid; gap: .8rem;
+}
+.stage:has(.voiceProbe) .pins { padding-top: 17.5rem; }
+.probeHead { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.probeHead div { min-width: 0; display: grid; gap: .24rem; }
+.probeHead small {
+  color: var(--faint); font: .62rem/1.2 var(--mono);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.probeHead strong { font-size: .92rem; letter-spacing: -.015em; }
+.probeStop { color: var(--bad) !important; border-color: color-mix(in srgb, var(--bad) 56%, var(--line)) !important; }
+.level { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .6rem; color: var(--faint); font: .65rem/1 var(--mono); }
+.level progress { width: 100%; height: .42rem; accent-color: var(--accent); }
+.probeBody { display: grid; gap: .3rem; padding: .7rem .75rem; border-radius: .72rem; background: var(--sunk); }
+.probeBody span, .probeResult span { color: var(--faint); font: .63rem/1.2 var(--mono); }
+.probeBody p { margin: 0; color: var(--fg); font-size: .8rem; line-height: 1.45; text-wrap: pretty; }
+.probeResult { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.probeResult button { padding: .25rem .48rem; font-size: .7rem; }
+.probeError { margin: 0; color: var(--bad); font-size: .75rem; line-height: 1.45; }
+.probeHint { color: var(--dim); font-size: .67rem; line-height: 1.45; }
 .toast { position: fixed; left: 50%; bottom: 6.4rem; translate: -50% .5rem; opacity: 0; pointer-events: none; z-index: 60; padding: .65rem .9rem; background: var(--fg); color: var(--bg); border-radius: .65rem; transition: .18s; }
 .toast.show { opacity: 1; translate: -50% 0; }
 @media (max-width: 880px) {
@@ -86,5 +119,10 @@
   .film button { min-width: 5.4rem; min-height: 3.8rem; }
   .pins { order: 3; display: flex; }
   .wires { display: none; }
+  .voiceProbe {
+    position: fixed; top: 4.3rem; left: .65rem; right: .65rem; width: auto; min-width: 0;
+    padding: .7rem; border-radius: .85rem;
+  }
+  .stage:has(.voiceProbe) .pins { padding-top: .9rem; }
   .composer { bottom: .45rem; width: calc(100vw - .8rem); }
 }

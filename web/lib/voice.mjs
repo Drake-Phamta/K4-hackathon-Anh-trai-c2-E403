@@ -63,12 +63,27 @@ export function encodeWav(chunks, inputRate, targetRate = 16000){
   return new Blob([buf], { type: 'audio/wav' });
 }
 
+/* Hội thoại rảnh tay: giữ nguyên ngưỡng đã tune ở prototype. Mỗi utterance
+   vẫn là một WAV/request riêng; VAD chỉ tự động hoá thao tác bấm–nói–bấm. */
+const VAD = {
+  VOICE: 0.02,
+  BARGE: 0.055,
+  START_MS: 120,
+  BARGE_MS: 250,
+  END_MS: 700,
+  MIN_MS: 400,
+  MAX_MS: 30000,
+  PREROLL_MS: 300,
+};
+
 export function createVoice({ onState, onTimer, onLevel } = {}){
   let stream = null, ac = null, proc = null, chunks = [];
   let timerId = 0, seconds = 0;
   let analyser = null, levelRaf = 0;
   let audioEl = null;
   let state = 'idle';                          // idle|recording|processing|speaking
+  let convo = false, cStream = null, cAc = null, cProc = null;
+  let convoToken = 0, convoHandlers = null;
 
   const setState = s => { if (s !== state){ state = s; onState?.(s); } };
 
@@ -247,6 +262,99 @@ export function createVoice({ onState, onTimer, onLevel } = {}){
     a._done?.();                               // resolve playBlob đang treo
   }
 
+  /* ── hội thoại liên tục: VAD + barge-in ─────────────────────────────
+     Mic chỉ mở sau cử chỉ người dùng. Im 700ms chốt một utterance; đang
+     phát TTS mà người dùng nói đủ lâu thì dừng tiếng trước khi gọi STT. */
+  async function startConversation({ onUtterance, onHearing, onTranscribing, onError } = {}){
+    if (convo) return;
+    if (state === 'recording' || state === 'processing') throw new Error('busy');
+    cStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    });
+    try{
+      try{ cAc = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 }); }
+      catch{ cAc = new (window.AudioContext || window.webkitAudioContext)(); }
+    }catch(err){
+      cStream.getTracks().forEach(t => t.stop()); cStream = null;
+      throw err;
+    }
+    convo = true;
+    const token = ++convoToken;
+    convoHandlers = { onUtterance, onHearing, onTranscribing };
+    const src = cAc.createMediaStreamSource(cStream);
+    cProc = cAc.createScriptProcessor(1024, 1, 1);
+    const blockMs = 1024 / cAc.sampleRate * 1000;
+    const preCount = Math.ceil(VAD.PREROLL_MS / blockMs);
+    let pre = [], utter = [], inUtter = false;
+    let voicedMs = 0, silentMs = 0, utterMs = 0, voicedTotal = 0;
+
+    cProc.onaudioprocess = e => {
+      if (!convo) return;
+      const block = new Float32Array(e.inputBuffer.getChannelData(0));
+      let sum = 0;
+      for (let i = 0; i < block.length; i++) sum += block[i] * block[i];
+      const rms = Math.sqrt(sum / block.length);
+      onLevel?.(Math.min(1, rms * 3.2));
+      const tts = !!audioEl;
+      if (!inUtter){
+        pre.push(block);
+        if (pre.length > preCount) pre.shift();
+        if (rms > (tts ? VAD.BARGE : VAD.VOICE)){
+          voicedMs += blockMs;
+          if (voicedMs >= (tts ? VAD.BARGE_MS : VAD.START_MS)){
+            if (tts) stopSpeaking();
+            inUtter = true;
+            utter = pre.slice(); pre = [];
+            silentMs = 0; utterMs = voicedTotal = voicedMs;
+            if (token === convoToken) onHearing?.(true);
+          }
+        } else voicedMs = 0;
+      } else {
+        utter.push(block); utterMs += blockMs;
+        if (rms > VAD.VOICE){ voicedTotal += blockMs; silentMs = 0; }
+        else silentMs += blockMs;
+        if (silentMs >= VAD.END_MS || utterMs >= VAD.MAX_MS){
+          const blocks = utter, voiced = voicedTotal;
+          inUtter = false;
+          utter = []; voicedMs = silentMs = utterMs = voicedTotal = 0;
+          if (token === convoToken) onHearing?.(false);
+          if (voiced >= VAD.MIN_MS) void finishUtter(blocks);
+        }
+      }
+    };
+    const mute = cAc.createGain(); mute.gain.value = 0;
+    src.connect(cProc); cProc.connect(mute); mute.connect(cAc.destination);
+
+    async function finishUtter(blocks){
+      const rate = cAc?.sampleRate ?? 16000;
+      if (token !== convoToken || !convo) return;
+      onTranscribing?.(true);
+      try{
+        const text = (await transcribe(encodeWav(blocks, rate))).trim();
+        if (text && convo && token === convoToken) onUtterance?.(text);
+      }catch(err){
+        console.error('[hội thoại · stt]', err);
+        if (token === convoToken) onError?.('stt');
+      }finally{
+        if (token === convoToken) onTranscribing?.(false);
+      }
+    }
+  }
+
+  function stopConversation(){
+    if (!convo) return;
+    convo = false;
+    convoToken++;
+    convoHandlers?.onHearing?.(false);
+    convoHandlers?.onTranscribing?.(false);
+    convoHandlers = null;
+    try{ cProc?.disconnect(); }catch{}
+    cProc = null;
+    cStream?.getTracks().forEach(t => t.stop()); cStream = null;
+    cAc?.close().catch(() => {}); cAc = null;
+    onLevel?.(0);
+  }
+
   /* ── dò dịch vụ — UI tắt mic kèm tooltip khi voice chết (G2) ────────── */
   async function probeHealth(){
     try{
@@ -263,6 +371,7 @@ export function createVoice({ onState, onTimer, onLevel } = {}){
     stream?.getTracks().forEach(t => t.stop()); stream = null;
     ac?.close?.().catch(() => {}); ac = null;
     chunks = [];
+    stopConversation();
     stopSpeaking();
     ttsCache.clear();
     setState('idle');
@@ -271,9 +380,11 @@ export function createVoice({ onState, onTimer, onLevel } = {}){
 
   return {
     startRecording, stopRecording, transcribe, speak, stopSpeaking, prefetch, probeHealth,
+    startConversation, stopConversation,
     stripMd, destroy,
     get state(){ return state; },
     get recording(){ return state === 'recording'; },
     get speaking(){ return state === 'speaking'; },
+    get conversing(){ return convo; },
   };
 }

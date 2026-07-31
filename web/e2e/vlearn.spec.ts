@@ -10,12 +10,49 @@ async function quietVoice(page: Page) {
   );
 }
 
+async function pushToTalkVoice(page: Page) {
+  await page.route('**/api/voice/health', route =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' })
+  );
+  await page.route('**/api/stt', route =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true,"text":""}' })
+  );
+}
+
 async function loadPdf(page: Page, route = '/console') {
   await quietVoice(page);
   await page.goto(route);
   await page.getByTestId('pdf-input').setInputFiles(PDF);
   await expect(page.getByText(/day03\.pdf · 44 trang/)).toBeVisible();
   await expect(page.locator('.pv-page')).toHaveCount(44);
+}
+
+async function installFakeConversationMic(page: Page) {
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = async () => {
+      const context = new AudioContext({ sampleRate: 16_000 });
+      const destination = context.createMediaStreamDestination();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.frequency.value = 220;
+      gain.gain.value = 0.16;
+      oscillator.connect(gain);
+      gain.connect(destination);
+      oscillator.start();
+      setTimeout(() => gain.gain.setValueAtTime(0, context.currentTime), 650);
+      for (const track of destination.stream.getTracks()) {
+        const stop = track.stop.bind(track);
+        track.stop = () => {
+          stop();
+          const report = (window as typeof window & {
+            reportVoiceTrackEnded?: () => void;
+          }).reportVoiceTrackEnded;
+          report?.();
+        };
+      }
+      return destination.stream;
+    };
+  });
 }
 
 test('Console lifecycle, PDF virtualization and page jump', async ({ page }) => {
@@ -107,12 +144,86 @@ test('Legacy and Next Console keep happy-path parity', async ({ page }) => {
   expect(await page.getByTestId('citation').count()).toBeGreaterThan(0);
 });
 
+test('Wild probe runs VAD turn and releases mic on stop and unmount', async ({ page }) => {
+  let endedTracks = 0;
+  await page.exposeFunction('reportVoiceTrackEnded', () => { endedTracks++; });
+  await installFakeConversationMic(page);
+  await page.route('**/api/voice/health', route =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' })
+  );
+  let sttCalls = 0;
+  await page.route('**/api/stt', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      ok: true,
+      text: ++sttCalls === 1 ? 'Tóm tắt trang mình đang xem' : '',
+    }),
+  }));
+  await page.route('**/api/tts', route => route.fulfill({
+    status: 200,
+    contentType: 'audio/wav',
+    body: Buffer.alloc(44),
+  }));
+
+  await page.goto('/wild?voice=probe');
+  await page.locator('input[type="file"]').setInputFiles(PDF);
+  await expect(page.locator('.pv-page')).toHaveCount(44);
+  await page.getByTestId('conversation-toggle').click();
+  await expect(page.getByTestId('voice-probe')).not.toHaveAttribute('data-phase', 'off');
+  await expect(page.getByTestId('voice-transcript')).toHaveText('Tóm tắt trang mình đang xem');
+  await expect(page.getByTestId('probe-decision')).toContainText('answer');
+  await page.getByTestId('probe-citation').click();
+  await expect(page.locator('.pv-hit').first()).toBeVisible();
+
+  await page.locator('header').getByRole('button', { name: '→', exact: true }).click();
+  await expect(page.getByText('2 / 44', { exact: true })).toBeVisible();
+  await page.getByTestId('conversation-toggle').click();
+  await expect(page.getByTestId('voice-probe')).toHaveAttribute('data-phase', 'off');
+  await expect.poll(() => endedTracks).toBeGreaterThan(0);
+
+  await page.getByTestId('conversation-toggle').click();
+  await expect(page.getByTestId('voice-probe')).not.toHaveAttribute('data-phase', 'off');
+  await page.getByRole('link', { name: 'Về trang chọn bản' }).click();
+  await expect(page).toHaveURL('/');
+  await expect.poll(() => endedTracks).toBeGreaterThan(1);
+});
+
+test('Wild probe reports microphone startup errors without entering conversation', async ({ page }) => {
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = async () => {
+      throw new DOMException('Permission denied', 'NotAllowedError');
+    };
+  });
+  await page.route('**/api/voice/health', route =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' })
+  );
+  await page.goto('/wild?voice=probe');
+  await page.locator('input[type="file"]').setInputFiles(PDF);
+  await page.getByTestId('conversation-toggle').click();
+  await expect(page.getByText('Không mở được micro — kiểm tra quyền trình duyệt')).toBeVisible();
+  await expect(page.getByTestId('voice-probe')).toHaveAttribute('data-phase', 'off');
+  await expect(page.getByTestId('conversation-toggle')).toHaveText('Bật hội thoại');
+});
+
 for (const route of ['/doc', '/wild'] as const) {
-  test(`${route} desktop smoke`, async ({ page }) => {
-    await quietVoice(page);
+  test(`${route} desktop smoke`, async ({ page, context }) => {
+    await context.grantPermissions(['microphone']);
+    await pushToTalkVoice(page);
     await page.goto(route);
     await page.locator('input[type="file"]').setInputFiles(PDF);
     await expect(page.getByText('day03.pdf · 44 trang', { exact: true }).first()).toBeVisible();
+    const ptt = page.getByTestId('push-to-talk');
+    await expect(ptt).toHaveAccessibleName('Nhấn giữ để nói');
+    await ptt.dispatchEvent('pointerdown', {
+      pointerId: 1, pointerType: 'mouse', button: 0, isPrimary: true,
+    });
+    await expect(ptt).toHaveAttribute('aria-pressed', 'true');
+    await expect(ptt).toContainText('thả để gửi');
+    await ptt.dispatchEvent('pointerup', {
+      pointerId: 1, pointerType: 'mouse', button: 0, isPrimary: true,
+    });
+    await expect(ptt).toHaveAttribute('aria-pressed', 'false');
     await page.getByText('Tóm tắt trang mình đang xem', { exact: true }).click();
     await expect(page.getByTestId('decision').last()).toHaveAttribute('data-decision', 'answer');
     await expect(page.getByTestId('citation').first()).toBeVisible();

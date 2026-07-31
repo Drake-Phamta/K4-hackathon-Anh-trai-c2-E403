@@ -4,7 +4,7 @@
 > **trạng thái hiện tại**, và **những cái bẫy đã trả giá để biết** — phần cuối là
 > phần đáng đọc nhất, vì nó là thứ không suy ra được từ code.
 
-**Cập nhật lần cuối:** hoàn tất local demo Giai đoạn A–E; chưa deploy.
+**Cập nhật lần cuối:** hoàn tất Gate S realtime voice probe; chờ user steer visual.
 
 ---
 
@@ -38,13 +38,23 @@
 - **Giai đoạn C** — `/doc` và `/wild` dùng hooks hiện tại, đủ decision/action/degraded state.
 - **Giai đoạn D** — GSAP motion primitives + callback `onPageRendered`; reduced-motion tắt chuyển động.
 - **Giai đoạn E** — breakpoint 880px; Console/Đọc thành bottom sheet, Bàn Slide thành danh sách ghim dọc.
-- **E2E Playwright** — 8 flow: lifecycle/virtualization/Trang 37, 5 decision,
+- **E2E Playwright** — 10 flow: lifecycle/virtualization/Trang 37, 5 decision,
   `outside_document` + `handoff_ta`, citation/theme/feedback/copy/log/voice-disabled,
-  legacy parity, Đọc, Bàn Slide, compact/reduced-motion.
+  legacy parity, Đọc, Bàn Slide, compact/reduced-motion và 2 flow voice probe.
+- **Gate S — `/wild?voice=probe`** — mic liên tục + VAD, STT theo utterance,
+  grounded Q&A, TTS gối đầu, barge-in, latest-only queue và cleanup media khi
+  stop/unmount. Overlay kỹ thuật hiển thị phase, RMS, transcript, decision,
+  citation và lỗi gần nhất. Slide/navigation/composer/push-to-talk vẫn hoạt động.
+  - Gate sạch: `npm run lint`, `npm run typecheck`, `npm run build`,
+    `npm run test:e2e` (**10/10**).
+  - Commit dự kiến: `feat(web): add realtime voice probe`.
 
 ### Chưa làm
-- Manual smoke mic STT/TTS trên máy demo.
+- Manual Gate S tại `/wild?voice=probe`: 3 lượt rảnh tay, im 30 giây,
+  barge-in và xác nhận mic indicator tắt.
 - LLM thật cần `.env`/key mới; không có key thì app ghi rõ `nhân mock`.
+- Liquid Glass và các visual `orb/hybrid/spectrum` đang chủ động dừng tới khi
+  user duyệt probe. Không cài `swiftui-react-native`.
 - Giai đoạn F deploy vẫn bị chặn bởi 3 điều kiện §6.
 
 ---
@@ -59,7 +69,7 @@ cd api && .venv/bin/uvicorn main:app --reload --port 8000
 cd web && API_ORIGIN=http://localhost:8000 npm run dev
 ```
 
-`http://localhost:3000` → chọn bản · `/console` là bản đã port.
+`http://localhost:3000` → chọn bản · `/wild?voice=probe` là Gate S hiện tại.
 Nạp slide: nút *Mở PDF*, kéo-thả, hoặc `?file=`.
 
 Không có `.env`/LLM thì **vẫn chạy** — `initCore()` im lặng rơi về nhân mock và

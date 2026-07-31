@@ -13,6 +13,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 export type VoiceState = 'idle' | 'recording' | 'processing' | 'speaking';
+export type ConversationHandlers = {
+  onUtterance: (text: string) => void;
+  onHearing?: (hearing: boolean) => void;
+  onTranscribing?: (transcribing: boolean) => void;
+  onError?: (stage: 'stt') => void;
+};
 
 type VoiceApi = {
   startRecording: () => Promise<void>;
@@ -21,21 +27,29 @@ type VoiceApi = {
   speak: (t: string) => Promise<void>;
   stopSpeaking: () => void;
   prefetch: (t: string) => void;
+  startConversation: (handlers: ConversationHandlers) => Promise<void>;
+  stopConversation: () => void;
   probeHealth: () => Promise<boolean>;
   destroy: () => void;
   readonly state: VoiceState;
   readonly recording: boolean;
   readonly speaking: boolean;
+  readonly conversing: boolean;
 };
 
 export function useVoice() {
   const ref = useRef<VoiceApi | null>(null);
+  const mountedRef = useRef(false);
   const [state, setState] = useState<VoiceState>('idle');
   const [seconds, setSeconds] = useState(0);
   const [level, setLevel] = useState(0);
   const [healthy, setHealthy] = useState<boolean | null>(null);   // null = chưa dò xong
+  const [conversing, setConversing] = useState(false);
+  const [hearing, setHearing] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
 
   useEffect(() => {
+    mountedRef.current = true;
     let disposed = false;
     let instance: VoiceApi | null = null;
 
@@ -53,13 +67,45 @@ export function useVoice() {
 
     return () => {
       disposed = true;
+      mountedRef.current = false;
       instance?.destroy();
       if (ref.current === instance) ref.current = null;
     };
   }, []);
 
+  const startConversation = useCallback(async (handlers: ConversationHandlers) => {
+    const instance = ref.current;
+    if (!instance) throw new Error('voice_not_ready');
+    await instance.startConversation({
+      onUtterance: handlers.onUtterance,
+      onHearing: value => {
+        if (!mountedRef.current) return;
+        setHearing(value);
+        handlers.onHearing?.(value);
+      },
+      onTranscribing: value => {
+        if (!mountedRef.current) return;
+        setTranscribing(value);
+        handlers.onTranscribing?.(value);
+      },
+      onError: stage => {
+        if (mountedRef.current) handlers.onError?.(stage);
+      },
+    });
+    if (mountedRef.current) setConversing(true);
+  }, []);
+
+  const stopConversation = useCallback(() => {
+    ref.current?.stopConversation();
+    ref.current?.stopSpeaking();
+    setConversing(false);
+    setHearing(false);
+    setTranscribing(false);
+    setLevel(0);
+  }, []);
+
   return {
-    state, seconds, level, healthy,
+    state, seconds, level, healthy, conversing, hearing, transcribing,
     recording: state === 'recording',
     speaking: state === 'speaking',
     start:      useCallback(() => ref.current?.startRecording() ?? Promise.resolve(), []),
@@ -68,6 +114,8 @@ export function useVoice() {
     speak:      useCallback((t: string) => ref.current?.speak(t) ?? Promise.resolve(), []),
     stopSpeaking: useCallback(() => ref.current?.stopSpeaking(), []),
     prefetch:   useCallback((t: string) => ref.current?.prefetch(t), []),
+    startConversation,
+    stopConversation,
   };
 }
 

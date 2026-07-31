@@ -35,6 +35,7 @@ export type AskResponse = {
 export type Turn = {
   id: string;
   question: string;
+  source?: 'text' | 'voice';
   selection: Selection;
   req: unknown;
   res: AskResponse | null;      // null = đang chờ
@@ -94,6 +95,7 @@ export function useTutor() {
     selection: Selection;
     viewer: ViewerApi;
     docName: string;
+    source?: 'text' | 'voice';
   }) => {
     const { buildRequest } = await import('@/lib/ui.mjs') as unknown as UiModule;
     const core = mod.current;
@@ -108,7 +110,10 @@ export function useTutor() {
     });
 
     const id = nextId();
-    setTurns(ts => [...ts, { id, question: args.question, selection: args.selection, req, res: null }]);
+    setTurns(ts => [...ts, {
+      id, question: args.question, source: args.source ?? 'text',
+      selection: args.selection, req, res: null,
+    }]);
     try {
       const res: AskResponse = await core.askTutor(req);
       patch(id, { res });
