@@ -301,7 +301,7 @@ details.mech code{font-size:11px}
 import { createViewer, injectViewerCSS } from './viewer.mjs';
 import { createVoice } from './voice.mjs';
 import { askTutor, setDocIndex, getLog, attachFeedback, AI_CORE } from './core.mjs';
-import { $, el, esc, md, DECISION, buildRequest, toSpeech, initTheme, downloadLog } from './ui.mjs';
+import { $, el, esc, md, DECISION, buildRequest, buildHistory, toSpeech, initTheme, downloadLog } from './ui.mjs';
 
 injectViewerCSS();
 const theme = initTheme('vlearn-theme-min');
@@ -471,7 +471,7 @@ async function send(){
   try{
     const res = await askTutor(buildRequest({
       question: q, selection: s, viewer, docName,
-      history: getLog().slice(-4).map(l => ({ role:'user', content:l.request.question })),
+      history: buildHistory(getLog()),
     }));
     render(res, node);
     if (voice.listening) voice.speak(toSpeech(res));

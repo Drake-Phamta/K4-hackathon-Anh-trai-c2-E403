@@ -126,6 +126,22 @@ export function toast(msg, ms = 2600){
   t._h = setTimeout(() => { t.style.opacity = '0'; }, ms);
 }
 
+/** Dựng history đa lượt từ LOG — giữ CẢ câu hỏi lẫn câu trả lời, đúng thứ tự.
+ *
+ * Bản trước chỉ map `l.request.question`, nên trợ giảng không bao giờ thấy
+ * chính nó vừa nói gì: "cái đó khác gì X?" hay "cho ví dụ khác đi" mất chỗ
+ * bám, và người dùng thấy các câu hỏi liên tiếp rời rạc như chưa từng hỏi.
+ * Câu trả lời vốn đã nằm sẵn trong cùng bản ghi LOG — chỉ là chưa ai lấy.
+ *
+ * Bỏ qua vế trợ giảng khi thiếu `answer`: lượt gọi LLM lỗi vẫn được ghi vào
+ * LOG, và nhét `undefined` vào prompt còn tệ hơn là khuyết một lượt. */
+export function buildHistory(log, turns = 3){
+  return log.slice(-turns).flatMap(l => [
+    { role: 'user', content: l.request.question },
+    ...(l.response?.answer ? [{ role: 'assistant', content: l.response.answer }] : []),
+  ]);
+}
+
 /** Dựng AskRequest đúng hợp đồng CONTRACT.md từ trạng thái viewer. */
 export function buildRequest({ question, selection, viewer, docName, history = [], mode = 'doc' }){
   const chat = mode === 'chat';

@@ -303,7 +303,7 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
 import { createViewer, injectViewerCSS } from './viewer.mjs';
 import { askTutor, setDocIndex, getLog, attachFeedback, AI_CORE, initCore,
          askOutside, buildHandoff, generateLecture } from './core.mjs';
-import { $, el, esc, md, decisionBadge, buildRequest, initTheme, downloadLog,
+import { $, el, esc, md, decisionBadge, buildRequest, buildHistory, initTheme, downloadLog,
          renderFollowUps, copyText, initMode, parseModeCommand, MODE_COMMANDS } from './ui.mjs';
 import { createVoice } from './voice.mjs';
 
@@ -904,7 +904,7 @@ async function send(){
       /* Đang/vừa thuyết trình thì tiêm mạch giảng vào history — "cái này/
          phần này" trong câu hỏi chen ngang tự neo đúng chỗ đang giảng. */
       history: [
-        ...getLog().slice(-4).map(l => ({ role:'user', content:l.request.question })),
+        ...buildHistory(getLog()),
         ...(lectureCtx ? [{ role:'assistant', content: lectureCtx }] : []),
       ],
     });

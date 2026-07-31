@@ -199,8 +199,22 @@ const phraseInDoc = p =>
 /* ══════════════════════════════════════════════════════════════════════════
    RETRIEVAL — chạy thật trên text PDF, không mock
    ══════════════════════════════════════════════════════════════════════════ */
-export function retrieve(query, selText, only = null){
-  const terms = [...new Set([...tokenize(query), ...tokenize(selText || '')])];
+/* `carry` = thuật ngữ MANG SANG từ lượt trước, cho câu nối tiếp dùng đại từ
+   ("nó khác gì…", "cái đó có nhược điểm gì"). Đo được trên deck thật:
+   "ReAct Pattern là gì?" → Tr.19 (7,4 điểm), nhưng câu nối tiếp về CHÍNH NÓ
+   → Tr.24 (1,1 điểm) — tra cứu mù hẳn vì đại từ không mang thuật ngữ nào.
+
+   VÌ SAO LÀ THAM SỐ RIÊNG, không nối thẳng vào `query`: `missing`/`found`
+   bên dưới — tức cổng ① phép phủ định — phải tính trên ĐÚNG thứ người dùng
+   vừa hỏi. Nối vào query thì "streaming" của lượt trước sẽ được coi là trọng
+   tâm của lượt này, và câu đáng bị từ chối vì thiếu căn cứ lại được trả lời.
+   Nên `carry` chỉ tham gia XẾP HẠNG, không bao giờ tham gia PHÉP PHỦ ĐỊNH. */
+export function retrieve(query, selText, only = null, carry = []){
+  const qTerms = [...new Set([...tokenize(query), ...tokenize(selText || '')])];
+  /* Thuật ngữ mang sang chỉ được thêm khi CHƯA có trong câu — người dùng nhắc
+     lại thuật ngữ thì lượt này tự đứng vững, không cần vịn lượt trước. */
+  const carryAdd = [...new Set(carry)].filter(t => t && !qTerms.includes(t));
+  const terms = [...qTerms, ...carryAdd];
   /* `only` = danh sách trang người dùng giới hạn. Mọi phép đếm bên dưới —
      idf, xếp hạng, VÀ phép phủ định — đều chạy trên đúng tập đó. Nếu chỉ lọc
      kết quả ở cuối thì "không có trong phạm vi bạn chọn" vẫn bị nhầm thành
@@ -225,7 +239,12 @@ export function retrieve(query, selText, only = null){
      Không đặt về 0: chúng vẫn phân biệt được trang khi câu hỏi thuần Việt,
      và câu KHÔNG có thuật ngữ nào thì mọi token cùng hệ số → xếp hạng giữ
      nguyên, không đụng tới các nhánh đang chạy đúng. */
-  const decSet = new Set(dec);
+  /* Thuật ngữ mang sang được cân NGANG thuật ngữ của câu: nó chính là chủ đề
+     đang nói, chỉ bị lược mất vì người ta nói "nó". Nếu để mức từ đệm (0,35)
+     thì mấy chữ Việt trong câu nối tiếp vẫn dìm được nó — đúng cái bệnh đang
+     chữa. `decSet` chỉ dùng cho TRỌNG SỐ và thưởng cụm, không đụng `dec` gốc
+     (biến nuôi `missing`/`found`). */
+  const decSet = new Set([...dec, ...carryAdd]);
   const FILLER_W = 0.35;
   const weightOf = t => decSet.has(t) ? 1 : FILLER_W;
 
@@ -376,6 +395,14 @@ function clip(s, n, ell = true){
   const out = (sp > n * 0.6 ? cut.slice(0, sp) : cut).trimEnd();
   return ell ? out + '…' : out;
 }
+
+/* Định dạng hội thoại trước cho prompt. Dùng ở CẢ hai nhánh có gọi LLM —
+   nhánh trả lời có trích dẫn và nhánh trò chuyện — nên để một khuôn duy nhất,
+   tránh cảnh sửa một chỗ quên chỗ kia.
+   6 lượt ≈ 3 cặp hỏi–đáp; 400 ký tự đủ giữ ý chính của một câu trả lời có
+   trích dẫn (mức 160 cũ cắt cụt tới mức câu trả lời thành vô nghĩa). */
+const fmtHist = (h, n = 6, len = 400) => (h || []).slice(-n)
+  .map(x => `${x.role === 'user' ? 'Học viên' : 'Trợ giảng'}: ${clip(x.content, len)}`).join('\n');
 
 /* ══════════════════════════════════════════════════════════════════════════
    LÁT CẮT — text trang đang xem LÀ nguồn sự thật
@@ -624,7 +651,7 @@ CÁCH TRẢ LỜI:
 
 Trả về văn bản thuần, không JSON, không dấu \`\`\`.`;
 
-async function chatResponse(q, curPage, trace, caps, T){
+async function chatResponse(q, curPage, trace, caps, T, history){
   const t0 = Date.now();
   let text = null;
   /* Nhãn phải nói THẬT ai viết câu này. Bản trước không set `core_used` ở nhánh
@@ -636,12 +663,19 @@ async function chatResponse(q, curPage, trace, caps, T){
   let degraded = null;
   if (caps.llm){
     try{
+      /* Nhánh này TỪNG hoàn toàn không có trí nhớ: prompt chỉ là câu hiện tại,
+         nên "mình vừa nói tên gì?" luôn trượt — đúng chế độ mà người dùng kỳ
+         vọng nhớ nhất. History là lời hai bên đã nói, KHÔNG phải nội dung tài
+         liệu, nên bất biến v1.2 vẫn nguyên: không page_text, citations luôn []. */
+      const hist = fmtHist(history);
       text = stripBlame(await callLLM({
         system: CHAT_PROMPT,
-        user: `HỌC VIÊN NÓI:\n${q}`,
+        user: [hist ? `HỘI THOẠI TRƯỚC:\n${hist}\n` : '', `HỌC VIÊN NÓI:\n${q}`]
+          .filter(Boolean).join('\n'),
         maxTokens: 260, temperature: 0.6,
       })).trim();
-      T('gọi LLM (trò chuyện)', `${MODEL_LABEL} · không đưa ngữ cảnh tài liệu`, t0);
+      T('gọi LLM (trò chuyện)', `${MODEL_LABEL} · không đưa ngữ cảnh tài liệu` +
+        (hist ? ` · kèm ${hist.split('\n').length} lượt trước` : ''), t0);
       if (text) used = 'real';
       else degraded = 'llm_empty';
     }catch(err){
@@ -815,6 +849,25 @@ function prevCitedPages(){
   return [...new Set((last?.response?.citations ?? []).map(c => c.page))].filter(Boolean);
 }
 
+/* Thuật ngữ CHỦ ĐỀ của mạch hội thoại, lấy từ history để cứu câu nối tiếp
+   dùng đại từ. Chỉ lấy từ lời HỌC VIÊN: câu trả lời của trợ giảng dài và
+   rải rác thuật ngữ phụ, gom hết vào sẽ kéo xếp hạng đi lung tung — thứ
+   người dùng đang nói tới nằm ở câu họ hỏi.
+
+   Duyệt từ MỚI NHẤT về cũ và chỉ giữ 3 thuật ngữ: chủ đề trôi theo thời
+   gian, lượt gần nhất mới là thứ "nó" đang trỏ vào. */
+function carryTerms(history, limit = 3){
+  const out = [];
+  for (const h of [...(history || [])].reverse()){
+    if (h?.role !== 'user') continue;
+    for (const t of decisiveTerms(h.content)){
+      if (!out.includes(t)) out.push(t);
+      if (out.length >= limit) return out;
+    }
+  }
+  return out;
+}
+
 /* ── Người dùng đang NÓI TIẾP về lượt vừa rồi ─────────────────────────────
    "tiếp đi", "ví dụ đi", "mình chưa hiểu", "nói lại đi" — không có thuật ngữ,
    không neo trang, nhưng KHÔNG hề mơ hồ với người đang ngồi đó: nó nói về câu
@@ -830,6 +883,13 @@ function prevCitedPages(){
 const SUMMARY_VERB = /\b(tom tat|tom luoc|tom gon|summary|summarize|dien giai|phan tich)\b|trang nay noi gi/;
 
 const CONTINUE_RE = /\b(tiep|tiep di|tiep tuc|nua di|them di|noi lai|noi ro|giai thich|de hieu|don gian|chua hieu|khong hieu|kho qua|ro hon|chi tiet hon|vi du|con gi nua|the con|con nua|sao lai the|tai sao vay)\b|^\s*(nua|them|tiep)\s*[!.?]*$/;
+
+/* Token trỏ — không mang nội dung hỏi, chỉ thay tên chủ đề đã nói. Dùng để
+   đo câu nối tiếp còn lại BAO NHIÊU nội dung thật sau khi trừ đại từ:
+   "nó khác gì Chain-of-Thought" còn 3, "nó thế nào" còn 0.
+   Đặt cạnh CONTINUE_RE vì cùng nhóm "câu nói về lượt trước", và phải nằm
+   TRƯỚC mọi chỗ dùng (DEICTIC ở cuối file, dùng sớm sẽ vướng TDZ). */
+const DEICTIC_TOK = new Set(['cai','no','nay','do','kia','ay','phan','thang','con','vay','the']);
 
 /* ── ② mơ hồ — hỏi lại ĐÚNG MỘT câu (G10) ─────────────────────────────── */
 function clarifyResponse(q, curPage, trace, prevPages = []){
@@ -1036,6 +1096,51 @@ function verifyCitations(list, req, scope = null){
    nên chặn ở tầng code chứ không chỉ nhắc trong prompt. */
 const BLAME_USER = /[^.!?\n]*\bcung cấp\b[^.!?\n]*\b(nội dung|tiêu đề|thông tin|chi tiết)\b[^.!?\n]*[.!?]?/gi;
 const stripBlame = s => String(s ?? '').replace(BLAME_USER, '').replace(/\s{2,}/g, ' ').trim();
+
+/* ── Tầng 2: nhờ LLM viết lại câu nối tiếp thành câu ĐỘC LẬP ──────────────
+   Tầng 1 (carryTerms) là thuần code: nhanh, không tốn lượt gọi, test được
+   offline — nên nó chạy trước và xử lý phần lớn ca. Tầng này chỉ để dành cho
+   ca tầng 1 bó tay: chủ đề nằm trong CÂU TRẢ LỜI của trợ giảng chứ không nằm
+   trong câu hỏi cũ, hoặc người dùng diễn đạt vòng vo không còn thuật ngữ nào.
+
+   Ba rào an toàn, vì đây là lượt gọi mạng nằm trên đường đi của MỌI câu hỏi:
+   ① chỉ trả về TỪ KHOÁ, không trả câu — không có gì để bịa, và không thể
+     biến thành đường tiêm chỉ thị vào prompt chính;
+   ② chỉ nhận từ CÓ THẬT trong tài liệu — LLM bịa "streaming" cũng vô hiệu,
+     nên cổng ① phép phủ định không thể bị lách;
+   ③ mọi lỗi/timeout đều nuốt, trả []. Tra cứu vẫn chạy như chưa có tầng này. */
+const REWRITE_PROMPT = `Người học đang hỏi tiếp về một tài liệu. Câu hỏi mới nhất dùng đại từ ("nó", "cái đó", "vậy còn") nên không tự đứng một mình được.
+
+Nhiệm vụ: đọc hội thoại và cho biết CHỦ ĐỀ mà câu hỏi mới nhất đang trỏ tới.
+
+Chỉ trả về 1-3 từ khoá, cách nhau bằng dấu phẩy. Ưu tiên thuật ngữ tiếng Anh nguyên gốc nếu có. KHÔNG viết câu, KHÔNG giải thích, KHÔNG thêm gì khác.`;
+
+async function rewriteTerms(q, history, T){
+  const t0 = Date.now();
+  try{
+    const hist = fmtHist(history, 4, 300);
+    if (!hist) return [];
+    const raw = await callLLM({
+      system: REWRITE_PROMPT,
+      user: `HỘI THOẠI:\n${hist}\n\nCÂU HỎI MỚI NHẤT:\n${q}`,
+      maxTokens: 40, temperature: 0,
+    });
+    const out = String(raw).split(',')
+      .flatMap(s => tokenize(s))
+      /* Rào ②: từ phải có thật trong deck mới được dùng để tra. */
+      .filter(t => t.length >= 3 && DOC.index.some(p => pageHas(p, t)))
+      .slice(0, 3);
+    T('nối mạch (LLM)', out.length
+      ? `viết lại chủ đề: ${out.join(', ')}`
+      : 'LLM không tìm được chủ đề nào có trong tài liệu', t0);
+    return [...new Set(out)];
+  }catch(err){
+    /* Không hạ cấp cả câu trả lời vì một lượt phụ hỏng — chỉ mất phần nối
+       mạch, và trace nói rõ là đã mất. */
+    T('nối mạch (LLM)', `⚠️ thất bại: ${err.message} — bỏ qua, tra bằng câu gốc`, t0);
+    return [];
+  }
+}
 
 async function callLLM({ system, user, schema, maxTokens = 700, temperature = 0.3 }){
   const r = await fetch(LLM_ENDPOINT, {
@@ -1288,7 +1393,7 @@ async function classify(req, trace, T, caps = {}){
      mà cả dự án này đi sửa. */
   if (mode === 'chat'){
     T('phân loại', 'chế độ trò chuyện — bỏ qua toàn bộ cổng tra cứu tài liệu');
-    const res = await chatResponse(q, curPage, trace, caps, T);
+    const res = await chatResponse(q, curPage, trace, caps, T, req.history);
     /* KHÔNG cụt đường: nếu câu này rõ ràng hỏi về tài liệu (có thuật ngữ CÓ
        THẬT trong deck, hoặc gọi tên trang), đính chip mời hỏi lại ở chế độ tài
        liệu. Đây KHÔNG phải tự động đổi chế độ — sự đồng ý vẫn thuộc về người
@@ -1459,8 +1564,39 @@ async function classify(req, trace, T, caps = {}){
   }
 
   /* ── tra cứu ──────────────────────────────────────────────────────── */
-  let { hits, terms, missing, found } = retrieve(q, sel?.text, scope);
+  /* Câu nối tiếp KHÔNG có thuật ngữ nào ("nó khác gì…", "cái đó có nhược
+     điểm gì") thì mượn chủ đề của lượt trước để tra. Chỉ mượn khi câu tự nó
+     không đứng được: có thuật ngữ rồi thì người dùng đã nói rõ họ hỏi gì,
+     mượn thêm chỉ làm nhiễu. */
+  const carry = decisiveTerms(q).length ? [] : carryTerms(req.history);
+  if (carry.length) T('nối mạch', `câu không có thuật ngữ — mượn chủ đề lượt trước: ${carry.join(', ')}`);
+  let { hits, terms, missing, found } = retrieve(q, sel?.text, scope, carry);
   const decisive = decisiveTerms(q);
+
+  /* ── Tầng 2: nhờ LLM khi tra vẫn mù ──────────────────────────────────
+     Ngưỡng 4,5 lấy từ số đo trên deck thật, không đoán: câu tra ĐÚNG đạt
+     6,9-10,6 điểm; câu tra MÙ (đại từ, không thuật ngữ) chỉ 1,1-4,1. Ranh
+     giới nằm gọn giữa hai vùng.
+     Chỉ chạy khi: câu tự nó không có thuật ngữ, CÓ hội thoại trước, và tầng
+     1 đã thử mà đỉnh bảng vẫn thấp — tức mỗi lượt gọi thêm này đều đổi lấy
+     một câu trả lời đằng nào cũng sắp trượt. */
+  const RESCUE_AT = 4.5;
+  if (caps.llm && !decisive.length && (req.history || []).length
+      && (hits[0]?.score ?? 0) < RESCUE_AT){
+    const extra = await rewriteTerms(q, req.history, T);
+    if (extra.length){
+      const r2 = retrieve(q, sel?.text, scope, [...carry, ...extra]);
+      /* Chỉ nhận kết quả mới khi nó THỰC SỰ khá hơn — LLM đoán trật thì giữ
+         nguyên bảng cũ, không đánh đổi cái đang có lấy cái tệ hơn. */
+      if ((r2.hits[0]?.score ?? 0) > (hits[0]?.score ?? 0)){
+        ({ hits, terms, missing, found } = r2);
+        T('tra cứu (lần 2)', `sau khi nối mạch → ${hits.length} trang khớp` +
+          (hits[0] ? ` · đỉnh Trang ${hits[0].page}` : ''));
+      } else {
+        T('tra cứu (lần 2)', 'nối mạch không cải thiện xếp hạng — giữ kết quả cũ');
+      }
+    }
+  }
 
   /* Trang được GỌI ĐÍCH DANH phải vào ngữ cảnh dù retrieval không chấm điểm
      cho nó. "tóm tắt trang 30 và trang 31" — Tr.31 có thể 0 điểm nên không
@@ -1544,11 +1680,48 @@ async function classify(req, trace, T, caps = {}){
      dùng thấy bot "không thông minh" — không phải vì nó từ chối, mà vì nó trả
      lời tự tin một câu chẳng ai hỏi. Cổng này chặn hẳn lối đó.
 
-     Ra khỏi đây có đúng hai đường, không có đường thứ ba xuống retrieval:
+     Ra khỏi đây có ba đường xuống dưới:
        · lượt trước có trích dẫn → hiểu là NÓI TIẾP về mấy trang đó
+       · MƯỢN ĐƯỢC chủ đề từ history và câu có nội dung hỏi thật → xuống
+         retrieval, tra bằng chủ đề mượn (đường mới, xem `carryOK` bên dưới)
        · không có gì để bám      → hỏi lại đúng một câu (②) */
   if (!scoped && !sel && !decisive.length){
     const prev = prevCitedPages();
+    /* ── Đường thứ ba: câu nối tiếp CÓ chủ đề mượn được ────────────────────
+       Cổng này viết khi chưa có gì để bám, nên "nó khác gì X?" bị coi là trỏ
+       mơ hồ và hỏi lại — dù người dùng vừa hỏi về ReAct ở lượt ngay trước.
+       Đo được: câu như vậy trả `clarify`, không bao giờ xuống tới retrieval.
+
+       Chỉ mở đường khi CẢ HAI cùng đúng:
+       ① CÓ mạch để bám — hoặc mượn được thuật ngữ ngay (`carryTerms`), hoặc
+          ít nhất có hội thoại trước để tầng 2 (LLM) thử viết lại chủ đề. Ca
+          thứ hai là thật: học viên hỏi thuần Việt ("phần vừa rồi bạn nói gì
+          thế?") thì chủ đề chỉ nằm trong LỜI TRỢ GIẢNG, `carryTerms` rỗng —
+          nếu đòi `carried.length` thì câu bị chặn ngay tại đây và tầng 2 có
+          chạy cũng vô nghĩa vì kết quả không còn ai dùng.
+       ② câu còn nội dung hỏi thật ngoài đại từ.
+
+       Phép đếm token KHÔNG tự phân biệt được hai loại — đo trên deck thật:
+       "vậy còn ưu điểm của nó?" còn đúng 1 token (`diem`) mà là câu hỏi thật,
+       còn "mình chưa hiểu" còn 2 token mà chỉ là lời nói tiếp. Nên việc loại
+       trừ giao hẳn cho CONTINUE_RE (vốn đã bắt đúng nhóm nói-tiếp), còn phép
+       đếm chỉ dùng để chặn câu RỖNG nghĩa như "nó là gì" (còn 0 token).
+
+       Mở cổng KHÔNG có nghĩa là sẽ trả lời liều: xuống dưới vẫn qua đủ cổng
+       ① phép phủ định và phép kiểm trích dẫn. Chỗ này chỉ quyết định "có đáng
+       đi tra không", không quyết định "có trả lời không". */
+    const carried = carryTerms(req.history);
+    /* Chốt then: mở cổng chỉ khi TRA CỨU (đã chạy ở trên, gồm cả tầng 1 và
+       tầng 2 nếu có) THỰC SỰ tìm được trang đáng tin. Đây là chỗ sửa một lỗi
+       đo được: nới cổng theo "có history" khiến "nó chạy như thế nào vậy?"
+       trả lời bằng Tr.39 điểm 1,3 — khớp mỗi chữ "chạy". Đúng bệnh mà cổng
+       này sinh ra để chặn (trace gốc: "nói lại đi" → answer · Tr.36,39,29).
+       Điểm đỉnh phải qua cùng ngưỡng RESCUE_AT dùng cho tầng 2: dưới mức đó
+       thì coi như không tìm được gì, và hỏi lại vẫn là câu trả lời tử tế hơn
+       một trang bất kỳ nói bằng giọng chắc nịch. */
+    const carryFound = (hits[0]?.score ?? 0) >= RESCUE_AT;
+    const carryOK = carryFound && !CONTINUE_RE.test(nq)
+                    && tokenize(q).filter(t => !DEICTIC_TOK.has(t)).length >= 1;
     /* Trang neo của lượt trước: ưu tiên trang người dùng ĐANG mở nếu nó nằm
        trong danh sách vừa trích — họ vẫn đang nhìn nó, nói "chưa hiểu" là nói
        về nó, không phải về trang phụ xếp đầu bảng. */
@@ -1581,6 +1754,13 @@ async function classify(req, trace, T, caps = {}){
        mơ hồ. Đếm từ là công cụ sai cho việc này.
        KHÔNG áp dụng khi câu có nhắc tới trang/slide — "bạn tóm tắt trang này"
        là hỏi bài, không phải tán gẫu. */
+    /* Câu nối tiếp có chủ đề mượn được + còn nội dung hỏi thật → KHÔNG hỏi
+       lại nữa. Phải đặt TRƯỚC cổng DEICTIC: "nó khác gì Chain-of-Thought?"
+       khớp DEICTIC nên nếu để sau thì không bao giờ tới lượt. */
+    } else if (carryOK){
+      T('phân loại', `câu nối tiếp — nối mạch tìm được Trang ${hits[0].page}` +
+        (carried.length ? ` (chủ đề "${carried.join(', ')}")` : '') + ', trả lời thay vì hỏi lại');
+
     } else if (DEICTIC.test(nq.trim()) || CONTINUE_RE.test(nq)
                || (tokenize(q).length <= 1
                    && !(/\b(ban|may|bot|tro giang|tutor)\b/.test(nq) && !PAGE_ANCHOR.test(nq)))){
@@ -1598,7 +1778,7 @@ async function classify(req, trace, T, caps = {}){
        tra tài liệu, không trích dẫn, nhãn riêng — nên không có gì để bịa. */
     } else {
       T('phân loại', 'không phải câu hỏi về slide — trò chuyện, không tra tài liệu');
-      return done(await chatResponse(q, curPage, trace, caps, T));
+      return done(await chatResponse(q, curPage, trace, caps, T, req.history));
     }
   }
   if (!scoped && !hits.length){
@@ -1643,8 +1823,7 @@ async function realCore(req){
       ? ` + ${hits.filter(h => h.page !== page).slice(0, 2).map(h => 'Tr.' + h.page).join(', ')}`
       : ''));
 
-  const hist = (req.history || []).slice(-2)
-    .map(h => `${h.role === 'user' ? 'Học viên' : 'Trợ giảng'}: ${clip(h.content, 160)}`).join('\n');
+  const hist = fmtHist(req.history);
 
   const user = [
     `NGỮ CẢNH:\n${context}`,

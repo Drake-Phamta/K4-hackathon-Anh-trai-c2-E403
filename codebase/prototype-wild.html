@@ -309,7 +309,7 @@ code{font-family:var(--mono);font-size:.9em;color:var(--cyan)}
 import { createViewer, injectViewerCSS } from './viewer.mjs';
 import { createVoice } from './voice.mjs';
 import { askTutor, setDocIndex, getLog, attachFeedback, AI_CORE } from './core.mjs';
-import { $, el, esc, md, DECISION, buildRequest, toSpeech, initTheme, downloadLog } from './ui.mjs';
+import { $, el, esc, md, DECISION, buildRequest, buildHistory, toSpeech, initTheme, downloadLog } from './ui.mjs';
 
 injectViewerCSS();
 /* Mặc định của bản này là tối (xưởng đêm), không theo hệ điều hành — phải
@@ -561,7 +561,7 @@ async function send(){
   try{
     const res = await askTutor(buildRequest({
       question: q, selection: s, viewer, docName,
-      history: getLog().slice(-4).map(l => ({ role:'user', content:l.request.question })),
+      history: buildHistory(getLog()),
     }));
     $('#heard').classList.remove('on');
     await pinAnswer(res, q, srcPage);
