@@ -28,7 +28,19 @@ export const DECISION = {
      phải "có căn cứ" — người dùng cần biết câu này KHÔNG kiểm chứng được
      bằng slide đang mở. */
   outside_document: { label: 'ngoài tài liệu ⚠️', icon: '⚠', tone: 'warn' },
+  /* Nhánh thứ 6 (CONTRACT v1.2) — trò chuyện, không tra tài liệu.
+     Trước đây lời chào bị dán "? cần làm rõ 30%": trả lời thì đúng mà nhãn thì
+     vô lý — chào hỏi có gì mà phải làm rõ. Gộp xã giao vào `clarify` là tiện
+     cho code, không tiện cho người đọc. `citations` bắt buộc rỗng. */
+  chat: { label: 'trò chuyện', icon: '💬', tone: 'mute' },
 };
+
+/* Không có nhãn thì KHÔNG được để nổ. `DECISION[res.decision]` trần từng làm
+   prototype.html ném TypeError, và UI hiển thị nó thành "Lỗi core: Cannot read
+   properties of undefined" — một lỗ hổng bản đồ nhãn bị báo nhầm thành lỗi nhân
+   AI. Thêm giá trị mới vào hợp đồng mà quên sửa đây là hỏng cả màn hình. */
+export const decisionBadge = d =>
+  DECISION[d] ?? { label: String(d || 'không rõ'), icon: '•', tone: 'mute' };
 
 /* ══════════════════════════════════════════════════════════════════════════
    FOLLOW-UP — chip gợi ý và chip HÀNH ĐỘNG
@@ -115,17 +127,62 @@ export function toast(msg, ms = 2600){
 }
 
 /** Dựng AskRequest đúng hợp đồng CONTRACT.md từ trạng thái viewer. */
-export function buildRequest({ question, selection, viewer, docName, history = [] }){
+export function buildRequest({ question, selection, viewer, docName, history = [], mode = 'doc' }){
+  const chat = mode === 'chat';
   return {
     question,
-    selection: selection ? { text: selection.text, page: selection.page, rects: null } : null,
-    page_text: viewer.pageText(viewer.page),
+    /* Chế độ trò chuyện KHÔNG được cầm tài liệu (CONTRACT v1.3). Chặn ngay ở
+       đây, tại chỗ dựng request, chứ không chỉ dựa vào nhân bỏ qua: nếu sau này
+       có ai thêm một đường đọc `page_text` mà quên kiểm `mode`, thì thứ họ đọc
+       được phải là rỗng. Rào đặt ở nguồn rẻ hơn rào đặt ở mọi chỗ tiêu thụ. */
+    selection: (!chat && selection) ? { text: selection.text, page: selection.page, rects: null } : null,
+    page_text: chat ? '' : viewer.pageText(viewer.page),
     document: {
       id: docName, title: docName,
       page_count: viewer.total, current_page: viewer.page,
     },
     history,
+    mode: chat ? 'chat' : 'doc',
   };
+}
+
+/** Chế độ hỏi: nhớ lựa chọn giữa các phiên. Cùng khuôn với initTheme. */
+export function initMode(key = 'vlearn-mode'){
+  const valid = m => (m === 'chat' ? 'chat' : 'doc');
+  /* Mặc định 'doc' — đó là lý do sản phẩm tồn tại. Ai muốn tán gẫu thì phải
+     nói ra; ngược lại thì không, vì hỏi bài mà rơi vào chế độ trò chuyện là
+     mất trích dẫn mà không hiểu vì sao. */
+  document.documentElement.dataset.mode = valid(localStorage.getItem(key));
+  return {
+    get(){ return valid(document.documentElement.dataset.mode); },
+    set(m){
+      const next = valid(m);
+      document.documentElement.dataset.mode = next;
+      localStorage.setItem(key, next);
+      return next;
+    },
+    toggle(){ return this.set(this.get() === 'chat' ? 'doc' : 'chat'); },
+  };
+}
+
+/** Cắt tiền tố slash command khỏi câu người dùng gõ: "/chat xin chào".
+    Trả `{ mode, text }` — `mode` null nghĩa là không có lệnh nào.
+
+    Chỉ nhận `/` ở ĐẦU chuỗi. Câu hỏi có `/` ở giữa ("A/B testing là gì",
+    "so sánh trang 3/4") không bị đụng tới. Và đây là phân tích trên đúng thứ
+    NGƯỜI DÙNG TỰ GÕ, không phải trên `page_text` — nên một PDF chứa dòng
+    "/chat" không kích hoạt được gì. */
+export const MODE_COMMANDS = [
+  { cmd: '/doc',  mode: 'doc',  desc: 'Hỏi theo tài liệu — trả lời kèm trích dẫn số trang' },
+  { cmd: '/chat', mode: 'chat', desc: 'Trò chuyện tự do — không tra tài liệu, không trích dẫn' },
+];
+export function parseModeCommand(raw){
+  const s = String(raw ?? '');
+  const m = /^\s*\/([a-z]+)\b[ \t]*([\s\S]*)$/i.exec(s);
+  if (!m) return { mode: null, text: s };
+  const hit = MODE_COMMANDS.find(c => c.cmd === '/' + m[1].toLowerCase());
+  if (!hit) return { mode: null, text: s };
+  return { mode: hit.mode, text: m[2] };
 }
 
 /** Theme: nhớ lựa chọn, mặc định theo hệ điều hành. */

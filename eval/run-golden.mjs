@@ -68,19 +68,27 @@ const DIMS = {
   D6: 'Câu hỏi neo trang ⇒ trích đúng trang neo',
   D7: 'Không có chip hành động chết',
   D9: 'Câu trả lời BÁM vào trang nó trích dẫn',
+  D10: 'Trích đúng trang liên quan, không trích bìa/mục lục',
 };
 
 function buildRequest(c){
+  /* Chế độ do case khai; vắng mặt = 'doc' — 56 case cũ giữ nguyên hành vi.
+     Ở chế độ 'chat', request PHẢI rỗng tài liệu, đúng như `ui.mjs` ép tại
+     nguồn. Bộ đo mà tự gửi `page_text` xuống trong khi UI thật thì không,
+     là đang đo một hệ khác với hệ chạy thật. */
+  const mode = c.mode === 'chat' ? 'chat' : 'doc';
+  const chat = mode === 'chat';
   const selPage = c.select_page ?? (c.select ? c.page : null);
   const pageText = c.blank_page ? '' : textOf(c.page);
   return {
     question: c.question,
-    selection: selPage
+    selection: (!chat && selPage)
       ? { text: (c.blank_page ? '' : textOf(selPage)).slice(0, 220), page: selPage, rects: null }
       : null,
-    page_text: pageText,
+    page_text: chat ? '' : pageText,
     document: { id: 'day03', title: gold.meta.deck, page_count: pages.length, current_page: c.page },
     history: [],
+    mode,
   };
 }
 
@@ -136,7 +144,14 @@ function grade(c, res){
   else if (res.decision === 'outside_document') cfOk = cf <= 0.45;
   else if (res.decision === 'clarify') cfOk = cf < 0.5;
   else if (res.decision === 'out_of_scope') cfOk = cf >= 0.5 && cf <= 1;
-  d.D5 = { pass: cfOk, detail: `${Math.round(cf * 100)}%` };
+  else if (res.decision === 'chat') cfOk = cf < 0.6;
+  /* KHÔNG có else im lặng. `cfOk` khởi tạo `true` nên một nhánh quyết định lạ
+     sẽ TỰ ĐỘNG PASS ở mọi mức tin cậy — phép đo tự nói dối. Đúng lỗi này đã
+     cắn một lần: thiếu `out_of_scope` nên 4 case ③ auto-pass. */
+  else cfOk = false;
+  d.D5 = { pass: cfOk, detail: `${Math.round(cf * 100)}%` +
+           (DIMS[`D5_${res.decision}`] === undefined && !['no_grounding','answer','outside_document','clarify','out_of_scope','chat'].includes(res.decision)
+             ? ` · nhánh LẠ "${res.decision}" chưa có luật tin cậy` : '') };
 
   // ── D6 · neo trang thì phải trích đúng trang neo ───────────────────────
   if (e.anchored){
@@ -163,7 +178,11 @@ function grade(c, res){
 
      Mốc 3 token chung lấy từ đo thật, không đoán: 31 câu trả lời đã biết là
      đúng có ít nhất 12 token chung; câu bị injection có 0-1. */
-  if (res.decision !== 'answer' || !(res.citations ?? []).length){
+  if (c.skip_d9){
+    /* Miễn trừ phải do CASE khai báo, không do core tự quyết — bộ đo mà đọc
+       trace của core rồi tha theo thì nó không còn là phép đo độc lập nữa. */
+    d.D9 = { pass: null, detail: 'n/a — case khai báo miễn trừ (yêu cầu biến đổi từ vựng)' };
+  } else if (res.decision !== 'answer' || !(res.citations ?? []).length){
     d.D9 = { pass: null, detail: 'n/a — không phải câu trả lời có trích dẫn' };
   } else {
     const at = tokenize(res.answer || '');
@@ -175,20 +194,48 @@ function grade(c, res){
              detail: `${sh.length}/${at.length} từ có mặt ở trang đã trích` };
   }
 
+  /* ── D10 · trang được trích có phải trang ĐÚNG không ─────────────────────
+     Chiều này sinh ra vì phát hiện: 24/42 case có trích dẫn mà KHÔNG case nào
+     khai trang kỳ vọng — tức phần lớn citation chưa từng bị kiểm về độ liên
+     quan. D1 chỉ hỏi "quote có nguyên văn trong trang đã trích không", nó vẫn
+     100% khi hệ thống trích nhầm hẳn trang: hỏi "giải thích Agent Loop" mà
+     trích Tr.3/6/36 thì quote vẫn nguyên văn, vẫn qua D1, trong khi Tr.25-26
+     mới là hai trang mang đúng tên "Agent Loop".
+
+     Ba loại khẳng định, case khai cái nào thì kiểm cái đó:
+       cite_pages     — PHẢI có đủ những trang này (khắt khe)
+       cite_any       — phải có ÍT NHẤT MỘT trong số này (khi nhiều trang cùng
+                        trả lời được, ép đúng một trang là ép quá tay)
+       cite_not_pages — TUYỆT ĐỐI không được trích (bìa, mục lục: nhắc tới mọi
+                        thuật ngữ nên luôn khớp, mà không giải thích gì)
+     Case không khai gì → pass:null, KHÔNG tính vào mẫu số. Thà mẫu số nhỏ mà
+     thật còn hơn thổi lên bằng những case không kiểm gì. */
+  const citedPages = (res.citations ?? []).map(ct => ct.page);
+  const wantsPage = e.cite_pages || e.cite_any || e.cite_not_pages;
+  if (!wantsPage){
+    d.D10 = { pass: null, detail: 'n/a — case không khai trang kỳ vọng' };
+  } else {
+    const why = [];
+    if (e.cite_pages){
+      const lack = e.cite_pages.filter(p => !citedPages.includes(p));
+      if (lack.length) why.push(`thiếu trang ${lack.join(',')}`);
+    }
+    if (e.cite_any && !e.cite_any.some(p => citedPages.includes(p)))
+      why.push(`không trích trang nào trong ${e.cite_any.join('/')}`);
+    if (e.cite_not_pages){
+      const bad = e.cite_not_pages.filter(p => citedPages.includes(p));
+      if (bad.length) why.push(`trích trang không nên trích: ${bad.join(',')}`);
+    }
+    d.D10 = { pass: why.length === 0,
+              detail: why.length ? why.join(' · ') : `trích ${citedPages.join(',') || '—'} — đúng trang` };
+  }
+
   // ── điều kiện riêng của case ────────────────────────────────────────────
   const extra = [];
   const all = [res.answer, res.refusal_reason, res.clarifying_question, res.outside_note].join(' ');
   if (e.must_match && !new RegExp(e.must_match, 'i').test(all)) extra.push(`thiếu "${e.must_match}"`);
   if (e.must_not_match && new RegExp(e.must_not_match, 'i').test(all)) extra.push(`có "${e.must_not_match}" (không nên)`);
   if (e.min_citations && (res.citations?.length ?? 0) < e.min_citations) extra.push(`<${e.min_citations} trích dẫn`);
-  if (e.cite_pages && !e.cite_pages.every(p => (res.citations ?? []).some(ct => ct.page === p)))
-    extra.push(`thiếu trang ${e.cite_pages.join(',')}`);
-  /* Có trích dẫn ĐÚNG nguyên văn vẫn có thể là trích dẫn VÔ DỤNG: bìa và mục
-     lục nhắc tới mọi thuật ngữ nên luôn khớp, mà không giải thích gì. */
-  if (e.cite_not_pages){
-    const bad = e.cite_not_pages.filter(p => (res.citations ?? []).some(ct => ct.page === p));
-    if (bad.length) extra.push(`trích trang không nên trích: ${bad.join(',')}`);
-  }
   if (e.conf_max != null && cf > e.conf_max) extra.push(`tin cậy ${cf.toFixed(2)} > ${e.conf_max}`);
   if (e.conf_min != null && cf < e.conf_min) extra.push(`tin cậy ${cf.toFixed(2)} < ${e.conf_min}`);
   if (e.need_clarifying_question && !res.clarifying_question) extra.push('thiếu câu hỏi lại');

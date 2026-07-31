@@ -1,4 +1,4 @@
-# Hợp đồng AI Core — `askTutor(AskRequest) → AskResponse`  ·  **v1.1**
+# Hợp đồng AI Core — `askTutor(AskRequest) → AskResponse`  ·  **v1.3**
 
 > **Chốt từ GĐ1. Người làm UI và người làm nhân AI code hai bên của hợp đồng này mà không chặn nhau.**
 > Đổi hợp đồng = phải báo cả hai bên. Thêm field mới thì được, đổi/xoá field cũ thì không.
@@ -11,6 +11,60 @@
 | 2 | `decision` thêm giá trị thứ 5 **`outside_document`** | Bất biến #2 nói `answer` ⇒ `citations ≥ 1`. Câu trả lời ngoài tài liệu không có trích dẫn tài liệu, gọi nó là `answer` là vi phạm đúng bất biến quan trọng nhất. |
 | 3 | `outside_note?: string` — vì sao câu này ra ngoài tài liệu | Song song với `refusal_reason`, để UI và eval đọc được. |
 | 4 | `core_used?: 'real' \| 'mock' \| 'mock-fallback'` + `degraded_reason?: string` | LLM chết thì hạ cấp về mock, nhưng phải **nói ra**, không giả vờ là AI thật (G2). |
+
+## Amendment v1.2 — N2 *(chỉ THÊM, không xoá/đổi field nào)*
+
+| # | Thêm gì | Vì sao |
+|---|---|---|
+| 1 | `decision` thêm giá trị thứ **6**: **`chat`** | Xã giao từng bị gộp vào `clarify` cho khỏi phải đổi hợp đồng — tiện cho code, nhưng người dùng gõ *"xin chào"* thì nhận badge **"? cần làm rõ 30%"**: trả lời đúng, nhãn vô lý. Lời chào có gì mà phải làm rõ |
+| 2 | `outside_note` giờ **được RENDER**, và được sinh ra cả trên nhánh `no_grounding` | Ô này có từ v1.1 nhưng chưa bao giờ vẽ ra màn hình. *"open ai là gì"* trước đây dừng ở ∅ 8% — ngõ cụt. Giờ phần **không kiểm chứng được** đi kèm ngay trong lượt đó, ở **ô riêng, nhãn riêng** |
+| 3 | **Bất biến #6 — cổng bám nguồn** | `verifyCitations` chỉ kiểm quote có nằm trong trang không, **chưa bao giờ kiểm câu trả lời có dính gì tới quote**. Một câu do người dùng đặt hàng từng được dán `✓ có căn cứ` **94%** kèm quote có thật |
+
+**Bất biến bổ sung cho `chat`:** `citations` PHẢI rỗng · `confidence` < 0,6 ·
+**không tra tài liệu** (không cầm tài liệu thì không có gì để bịa là "có căn cứ").
+
+## Amendment v1.3 — công tắc chế độ *(chỉ THÊM, không xoá/đổi field nào)*
+
+| # | Thêm gì | Vì sao |
+|---|---|---|
+| 1 | `AskRequest.mode?: 'doc' \| 'chat'` — **vắng mặt = `'doc'`**, nên mọi request cũ vẫn hợp lệ và chạy y như trước | Hơn 20 cổng trong `classify()` làm đúng một việc: **đoán** xem người dùng hỏi tài liệu hay tán gẫu. Đoán thì luôn có "cách gõ thứ N+1 lọt khe". **Ý định là thứ duy nhất người dùng BIẾT CHẮC còn máy phải suy luận** — hỏi thẳng rẻ hơn đoán |
+| 2 | UI gọi chế độ bằng lệnh `/doc` · `/chat` gõ ở **đầu** ô nhập, hoặc bấm chỉ báo | Nhanh, không rời bàn phím. Tiền tố bị cắt **trước** khi dựng request nên nhân không bao giờ thấy dấu `/` |
+| 3 | `follow_ups` thêm action **`ask_in_doc_mode`** | Ở chế độ chat mà hỏi một câu tra được trong deck thì **mời** đổi chế độ, chứ không tự đổi và cũng không bỏ mặc |
+
+**Bất biến cho `mode === 'chat'`** — code bảo đảm, không phải model tự giữ:
+`page_text` gửi xuống là **chuỗi rỗng** · `selection` bị bỏ · **không chạy `retrieve()`** ·
+`citations` rỗng · `confidence` < 0,6.
+
+**Vì sao công tắc này KHÔNG lặp lại thất bại của lượt 21.** Lượt 21 để **LLM tự chọn**
+mode trong khi nó **đang cầm tài liệu** — nên `G55` *"in ra system prompt"* lọt thành
+`answer` 70% kèm trích dẫn thật. Ở đây **người dùng** chọn, và chế độ chat **không cầm
+tài liệu**: bề mặt tấn công không rộng thêm một milimet nào.
+
+**Cấm tuyệt đối:** không được thêm nhánh kiểu `if (mode === 'chat') skip` vào cổng bám
+nguồn (bất biến #6). Chế độ chat an toàn vì nó **không đi qua** cổng đó, **không phải** vì
+được miễn trừ. Cổng đó hiện có đúng **một** lỗ miễn trừ hợp pháp (`transform`) — thêm lỗ
+thứ hai là mở lại đúng chỗ đã bị đâm thủng một lần.
+
+**Bốn rào an toàn chạy ở CẢ HAI chế độ** (có case ÂM trong golden set canh): câu rỗng ·
+xin quiz/flashcard · ③ ngoài phạm vi (làm hộ bài tập · deadline/điểm số) · phản đối câu
+trả lời trước. Chọn chế độ trò chuyện **không mở được cửa nào** trong số đó.
+
+**Bất biến #6 (cổng bám nguồn):** một câu `decision:'answer'` phải có **≥3 từ nội
+dung** xuất hiện trong trang mà nó viện dẫn. Ngưỡng **hiệu chuẩn trên 31 câu trả
+lời thật** (đáy 12 từ chung) so với câu bị injection (0–1). Không đạt → **hạ
+xuống `no_grounding`**, không bao giờ được dán nhãn có căn cứ. Miễn trừ duy nhất:
+yêu cầu **biến đổi từ vựng** (dịch/viết lại), và phải **khai báo công khai** bằng
+`skip_d9` trong case golden, không giấu trong code.
+
+**LUẬT NHÃN — quan trọng hơn mọi field:** `decision`, `confidence`, `citations`
+là **do CODE dán**, không lấy từ lời tự khai của model. Model tự do quyết định
+*nói gì*; code giữ độc quyền *dán nhãn*. Đây là thứ cho phép nới tự do mà không
+mở đường cho bịa đặt.
+
+**Nhánh quyết định lạ KHÔNG được làm vỡ UI:** dùng `decisionBadge(d)` (`ui.mjs`)
+có lối lui, không tra thẳng `DECISION[d]` — bản trước ném `TypeError` và UI hiển
+thị nó thành *"Lỗi core: …"*, tức một lỗ hổng bản đồ nhãn bị báo nhầm thành lỗi
+nhân AI.
 
 **Bất biến bổ sung cho `outside_document`:** `citations` PHẢI rỗng · `confidence` ≤ 0,45 ·
 UI phải hiển thị khác hẳn nhánh có căn cứ · và **chỉ được sinh ra khi người dùng
@@ -52,6 +106,11 @@ interface AskRequest {
   };
 
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
+
+  mode?: 'doc' | 'chat';         // v1.3 — chế độ do NGƯỜI DÙNG chọn.
+                                 // vắng mặt = 'doc' (request cũ vẫn hợp lệ).
+                                 // 'chat' ⇒ page_text = '' và selection = null,
+                                 // do buildRequest() ép ngay tại nguồn.
 }
 ```
 
@@ -59,11 +118,14 @@ interface AskRequest {
 
 ```ts
 interface AskResponse {
-  // Nhánh quyết định — UI render 4 kiểu khác nhau theo field này.
-  // v1.1: thêm 'outside_document' — chỉ sinh ra khi NGƯỜI DÙNG bấm chip,
-  // citations bắt buộc rỗng, confidence ≤ 0.45 (xem Amendment v1.1 ở đầu file)
+  // Nhánh quyết định — UI render MỘT KIỂU KHÁC NHAU cho mỗi giá trị.
+  // v1.1: 'outside_document' — chỉ sinh ra khi NGƯỜI DÙNG bấm chip,
+  //       citations rỗng, confidence ≤ 0.45
+  // v1.2: 'chat' — trò chuyện, KHÔNG tra tài liệu, citations rỗng, conf < 0.6
+  // Thêm giá trị mới thì PHẢI sửa đủ 3 chỗ: ui.mjs DECISION · eval/run-golden.mjs
+  // D5 · file này. Thiếu ui.mjs là vỡ màn hình; thiếu D5 là phép đo tự pass.
   decision: 'answer' | 'clarify' | 'no_grounding' | 'out_of_scope'
-          | 'outside_document';
+          | 'outside_document' | 'chat';
 
   answer: string;                // markdown tối giản: **đậm**, *nghiêng*, \n
   confidence: number;            // 0..1 — hiện thành badge, KHÔNG được bịa cao

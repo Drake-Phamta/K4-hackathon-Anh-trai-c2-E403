@@ -46,15 +46,15 @@ Nhãn góc trên phải phải hiện **`AI thật (gemma-4)`**; hiện `nhân m
 python eval/verify-evidence.py                        # E1..E10 → eval/evidence-report.md
 python codebase/dump-pages.py data/slides/day03.pdf ../tmp/pages.json   # ghi RA NGOÀI repo
 node codebase/test-core.mjs      ../tmp/pages.json    # 14/14 · 24/24 · 8/8
-node codebase/test-intents.mjs   ../tmp/pages.json    # 101/101 · 48/48  (lát cắt + intent + bẫy hồi quy)
-node eval/run-golden.mjs         ../tmp/pages.json --core=real --run=13  # 52/53 = 98,1%
+node codebase/test-intents.mjs   ../tmp/pages.json    # 118/118 · 48/48  (lát cắt + intent + bẫy hồi quy)
+node eval/run-golden.mjs         ../tmp/pages.json --core=real --run=19  # 55/56 = 98,2%
 ```
 
 ## Kết quả · đối chiếu quality bar
 
 | | Cam kết (chốt 23:59 N1) | Đo được (lượt 2 — AI thật, sau vòng audit) |
 |---|---|---|
-| Tổng golden set | ≥ **90%** | **98,1%** (52/53) ✅ |
+| Tổng golden set | ≥ **90%** | **98,2%** (55/56) ✅ |
 | D1 trích dẫn cắt nguyên văn (so **toàn chuỗi**) | **100%** (điều kiện cứng) | 25/25 case có trích dẫn ✅ |
 | D3 không đòi học viên cung cấp nội dung trang | **100%** (điều kiện cứng) | 33/33 ✅ |
 | D6 neo trang ⇒ trích đúng trang neo | **100%** (điều kiện cứng) | 10/10 ✅ |
@@ -73,7 +73,7 @@ Một case chưa đạt (`G06` · turn `T0115`) — nguyên nhân phân tích tr
 ├── demo-slides.html     ← 6 trang · Ctrl+P → demo-slides.pdf
 ├── demo-script.md       ← kịch bản demo + Q&A đã chuẩn bị
 ├── codebase/            ← prototype (bản Console) + proxy LLM + test
-├── eval/                ← golden set 53 case · runner · các lượt đo · trace log · script bằng chứng
+├── eval/                ← golden set 56 case · runner · các lượt đo · trace log · script bằng chứng
 ├── validation/          ← protocol + task card + feedback log (chạy sáng N2)
 ├── reflection/          ← mỗi người 1 file
 └── data/                ← data pack của khoá (BTC cấp)

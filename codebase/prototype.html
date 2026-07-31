@@ -193,6 +193,24 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
 #scen{display:flex;gap:4px;flex-wrap:wrap;font-size:10.5px;align-items:center}
 #scen.hide{display:none}
 #scen .l{color:var(--faint);font-family:var(--mono)}
+
+/* Chỉ báo chế độ — dùng lại đúng .fu của chip, chỉ thêm trạng thái ĐANG CHỌN.
+   Một chế độ ẩn là cái bẫy: người dùng gõ /chat mười phút trước rồi quên, hỏi
+   về slide và tưởng hệ thống bịa. Nên nó luôn hiện, không thu gọn. */
+#modeBar{display:flex;gap:4px;flex-wrap:wrap;font-size:10.5px;align-items:center;margin-top:6px}
+#modeBar .l{color:var(--faint);font-family:var(--mono)}
+#modeBar .fu[aria-pressed="true"]{border-style:solid;border-color:var(--accent);
+  color:var(--accent);background:var(--accent-soft);font-weight:600}
+
+/* Menu slash — nổi ngay trên ô nhập, không đẩy layout. */
+#slash{display:flex;flex-direction:column;gap:2px;margin-bottom:6px;padding:4px;
+  background:var(--panel);border:1px solid var(--line);border-radius:8px}
+#slash.hide{display:none}
+#slash .it{display:flex;gap:8px;align-items:baseline;padding:5px 8px;border-radius:6px;
+  cursor:pointer;background:transparent;border:0;color:var(--fg);text-align:left;width:100%}
+#slash .it[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
+#slash .it code{font-family:var(--mono);font-size:12px;font-weight:600}
+#slash .it .d{font-size:11px;color:var(--dim)}
 .spin{width:11px;height:11px;border:2px solid var(--line);border-top-color:var(--accent);
   border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -249,11 +267,21 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
           <span class="x" id="selTx"></span>
           <button class="btn sm" id="selX">✕</button>
         </div>
+        <!-- Menu slash: hiện khi gõ "/" ở ĐẦU ô nhập. Chỉ báo chế độ luôn
+             hiển thị ở #modeBar bên dưới — chế độ ẩn là cái bẫy. -->
+        <div id="slash" class="hide" role="listbox" aria-label="Chọn chế độ"></div>
         <div id="row">
           <textarea id="q" rows="1" placeholder="Hỏi về nội dung slide… (Enter để gửi)" disabled></textarea>
           <button class="btn" id="mic" disabled>🎙</button>
           <button class="btn" id="convo" disabled>🎧</button>
           <button class="btn pri" id="send" disabled>Gửi</button>
+        </div>
+        <!-- Chỉ báo chế độ: bấm được để đổi, cho ai không biết lệnh "/". -->
+        <div id="modeBar">
+          <span class="l">chế độ</span>
+          <button class="fu" data-mode="doc">📄 Hỏi theo tài liệu</button>
+          <button class="fu" data-mode="chat">💬 Trò chuyện tự do</button>
+          <span class="l" id="modeHint">gõ <b>/</b> để đổi nhanh</span>
         </div>
         <div id="scen" class="hide">
           <span class="l">kịch bản</span>
@@ -276,11 +304,12 @@ import { createViewer, injectViewerCSS } from './viewer.mjs';
 import { askTutor, setDocIndex, getLog, attachFeedback, AI_CORE, initCore,
          askOutside, buildHandoff, generateLecture } from './core.mjs';
 import { $, el, esc, md, decisionBadge, buildRequest, initTheme, downloadLog,
-         renderFollowUps, copyText } from './ui.mjs';
+         renderFollowUps, copyText, initMode, parseModeCommand, MODE_COMMANDS } from './ui.mjs';
 import { createVoice } from './voice.mjs';
 
 injectViewerCSS();
 const theme = initTheme();
+const mode  = initMode();
 let sel = null, docName = 'chưa nạp';
 
 const toast = (m, ms = 2300) => { const t = $('#toast'); t.textContent = m; t.classList.add('on');
@@ -742,6 +771,17 @@ function addAI(res, node, req){
   renderFollowUps(res, f, {
     question: label => { $('#q').value = label; send(); },
 
+    /* Đường lui ③: đang ở chế độ trò chuyện mà câu hỏi tra được trong tài
+       liệu. KHÔNG tự đổi chế độ — chỉ mời. Cùng nguyên tắc với đường lui ①:
+       bước sang chỗ có trích dẫn là quyết định của người dùng, không phải
+       của AI. Khác là họ không phải tự mò ra công tắc. */
+    ask_in_doc_mode: async () => {
+      setMode('doc', { toast: false });
+      $('#q').value = req.question;
+      toast('📄 Đã chuyển sang Hỏi theo tài liệu — hỏi lại câu này kèm trích dẫn');
+      await send();
+    },
+
     /* Đường lui ①: chỉ mở khi NGƯỜI DÙNG bấm — AI không tự bước ra ngoài
        tài liệu. Đây là mức automation Conditional ở dạng code. */
     answer_outside: async () => {
@@ -771,7 +811,84 @@ function addAI(res, node, req){
 
 const scroll = () => { const l = $('#log'); l.scrollTop = l.scrollHeight; };
 
+/* ══════════════════════════════════════════════════════════════════════
+   CHẾ ĐỘ HỎI — công tắc do người dùng chọn (CONTRACT v1.3)
+   ══════════════════════════════════════════════════════════════════════
+   Thay cho hơn 20 cổng regex vốn phải ĐOÁN xem người dùng hỏi tài liệu hay
+   tán gẫu. Ý định là thứ duy nhất người dùng biết chắc còn máy phải suy
+   luận — nên hỏi thẳng rẻ hơn đoán.
+
+   Gọi bằng "/" trong ô nhập (nhanh, không rời bàn phím) HOẶC bấm chỉ báo
+   bên dưới (cho ai không biết có lệnh). Chỉ báo luôn hiện, không thu gọn. */
+const PLACEHOLDER = {
+  doc:  'Hỏi về nội dung slide… (Enter để gửi · / để đổi chế độ)',
+  chat: 'Trò chuyện tự do — không tra tài liệu… (/ để đổi chế độ)',
+};
+function syncMode(){
+  const m = mode.get();
+  for (const b of document.querySelectorAll('#modeBar .fu'))
+    b.setAttribute('aria-pressed', String(b.dataset.mode === m));
+  $('#q').placeholder = PLACEHOLDER[m];
+}
+function setMode(m, { toast: say = true } = {}){
+  if (mode.get() === m){ syncMode(); return; }
+  mode.set(m);
+  syncMode();
+  if (say) toast(m === 'chat'
+    ? '💬 Trò chuyện tự do — mình sẽ KHÔNG tra tài liệu và không trích dẫn'
+    : '📄 Hỏi theo tài liệu — mọi câu trả lời sẽ kèm trích dẫn số trang');
+}
+for (const b of document.querySelectorAll('#modeBar .fu'))
+  b.onclick = () => { setMode(b.dataset.mode); $('#q').focus(); };
+
+/* ── menu "/" ──────────────────────────────────────────────────────────
+   Chỉ mở khi "/" đứng ở ĐẦU ô nhập. Câu hỏi có "/" ở giữa ("A/B testing")
+   không bị đụng. Và đây là phân tích trên đúng thứ NGƯỜI DÙNG TỰ GÕ, không
+   phải trên page_text — PDF chứa dòng "/chat" không kích hoạt được gì. */
+let slashIx = 0;
+const slashOpen = () => !$('#slash').classList.contains('hide');
+function closeSlash(){ $('#slash').classList.add('hide'); }
+function renderSlash(){
+  const raw = $('#q').value;
+  const m = /^\s*\/([a-z]*)$/i.exec(raw);
+  if (!m){ closeSlash(); return; }
+  const typed = m[1].toLowerCase();
+  const list = MODE_COMMANDS.filter(c => c.cmd.slice(1).startsWith(typed));
+  if (!list.length){ closeSlash(); return; }
+  slashIx = Math.min(slashIx, list.length - 1);
+  const box = $('#slash');
+  box.replaceChildren(...list.map((c, i) => {
+    const b = el('button', 'it');
+    b.type = 'button';
+    b.setAttribute('aria-selected', String(i === slashIx));
+    b.append(el('code', '', c.cmd), el('span', 'd', c.desc));
+    b.onclick = () => pickSlash(c);
+    return b;
+  }));
+  box._list = list;
+  box.classList.remove('hide');
+}
+function pickSlash(c){
+  setMode(c.mode);
+  $('#q').value = '';
+  closeSlash();
+  $('#q').focus();
+}
+
 async function send(){
+  const raw = $('#q').value;
+  /* Cắt tiền tố lệnh TRƯỚC khi dựng request: "/chat xin chào" đổi chế độ rồi
+     gửi "xin chào" — nhân nhận câu sạch, không bao giờ thấy dấu "/". */
+  const cmd = parseModeCommand(raw);
+  if (cmd.mode){
+    setMode(cmd.mode);
+    closeSlash();
+    if (!cmd.text.trim()){          // "/chat" đứng một mình → chỉ đổi chế độ
+      $('#q').value = ''; $('#q').style.height = 'auto';
+      return null;
+    }
+    $('#q').value = cmd.text;
+  }
   const q = $('#q').value.trim();
   if (!q || !viewer.total) return;
   const s = sel;
@@ -783,7 +900,7 @@ async function send(){
   const fromVoice = viaVoice; viaVoice = false;
   try{
     const request = buildRequest({
-      question: q, selection: s, viewer, docName,
+      question: q, selection: s, viewer, docName, mode: mode.get(),
       /* Đang/vừa thuyết trình thì tiêm mạch giảng vào history — "cái này/
          phần này" trong câu hỏi chen ngang tự neo đúng chỗ đang giảng. */
       history: [
@@ -864,12 +981,30 @@ $('#zi').onclick = () => { viewer.setZoom(viewer.scale + .2); $('#zl').textConte
 $('#zo').onclick = () => { viewer.setZoom(viewer.scale - .2); $('#zl').textContent = Math.round((viewer.scale-.2)/viewer.fit*100)+'%'; };
 $('#send').onclick = send;
 $('#q').addEventListener('keydown', e => {
+  /* Menu "/" đang mở thì phím mũi tên/Enter thuộc về MENU, không phải ô nhập —
+     nếu không thì Enter vừa chọn lệnh vừa gửi câu hỏi rỗng. */
+  if (slashOpen()){
+    const list = $('#slash')._list ?? [];
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+      e.preventDefault();
+      slashIx = (slashIx + (e.key === 'ArrowDown' ? 1 : list.length - 1)) % list.length;
+      renderSlash();
+      return;
+    }
+    if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); pickSlash(list[slashIx]); return; }
+    if (e.key === 'Escape'){ e.preventDefault(); closeSlash(); return; }
+    if (e.key === 'Tab'){ e.preventDefault(); pickSlash(list[slashIx]); return; }
+  }
   if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
 });
 $('#q').addEventListener('input', e => {
   e.target.style.height = 'auto';
   e.target.style.height = Math.min(130, e.target.scrollHeight) + 'px';
+  slashIx = 0;
+  renderSlash();
 });
+$('#q').addEventListener('blur', () => setTimeout(closeSlash, 120));
+syncMode();
 $('#theme').onclick = () => theme.toggle();
 $('#dl').onclick = () => {
   const t = getLog();

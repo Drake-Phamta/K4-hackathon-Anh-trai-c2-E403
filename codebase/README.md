@@ -90,7 +90,7 @@ python dump-pages.py ../data/slides/day03.pdf ../../tmp/pages.json   # ghi RA NG
 
 node test-core.mjs      ../../tmp/pages.json    # 4 lớp chỗ khó
 node test-intents.mjs  ../../tmp/pages.json    # bộ định tuyến: 16 intent + bẫy hồi quy
-node ../eval/run-golden.mjs ../../tmp/pages.json --core=real --run=13  # golden set 53 case
+node ../eval/run-golden.mjs ../../tmp/pages.json --core=real --run=19  # golden set 56 case
 ```
 
 Kết quả trên deck Day 3 (44 trang):
@@ -98,8 +98,8 @@ Kết quả trên deck Day 3 (44 trang):
 | Bộ | Kết quả |
 |---|---|
 | `test-core.mjs` | **14/14** kịch bản · **24/24** trích dẫn nguyên văn · **8/8** phép phủ định |
-| `test-intents.mjs` | **101/101** (neo trang · 7 intent mới, mỗi intent ≥1 case âm · bẫy hồi quy) · **27/27** trích dẫn nguyên văn |
-| `eval/run-golden.mjs` (AI thật) | **52/53 = 98,1%** · bar cam kết ≥90% |
+| `test-intents.mjs` | **118/118** (neo trang · 7 intent mới, mỗi intent ≥1 case âm · bẫy hồi quy) · **27/27** trích dẫn nguyên văn |
+| `eval/run-golden.mjs` (AI thật) | **55/56 = 98,2%** · bar cam kết ≥90% |
 
 `test-intents.mjs` canh riêng cái dễ mất nhất: mở rộng grounding sang `page_text`
 mà **không** chọc lỗ vào cổng chống bịa. Bẫy quan trọng nhất là *bôi đen một đoạn rồi
@@ -170,7 +170,7 @@ kèm lý do. `variant` trong metadata cho biết log đến từ bản nào.
   ăn 3,81đ (do `def` có trong code Python Tr.33) còn `"điêu toa"` chỉ 2,75đ. Cần embedding.
 - Chưa có pane Ghi chú cá nhân hoá (non-goal).
 - Retrieval là keyword + idf, chưa có embedding (non-goal).
-- Số **98,1%** chỉ chắc trên **một deck** (day03, 44 trang). Chưa đo trên 6 transcript còn lại.
+- Số **98,2%** chỉ chắc trên **một deck** (day03, 44 trang). Chưa đo trên 6 transcript còn lại.
 - Chuyển TA là **mock**: copy clipboard, chưa đẩy vào Discord khoá.
 - PDF scan (không có text layer) không tra cứu được — nhưng **từ chối với lý do riêng**,
   không lẫn với "tài liệu không chứa" (case `G31`).
