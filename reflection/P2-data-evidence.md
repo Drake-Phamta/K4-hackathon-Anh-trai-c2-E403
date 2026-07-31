@@ -1,6 +1,6 @@
 # Reflection — P2 · Data & Evidence
 
-**Tên (mã HV):** ⚠️ TODO
+**Tên (mã HV):** Ngô Ngọc Quyền — 2A202601928
 **Vai:** P2 · Data & Evidence
 
 ## 1. Phần mình làm

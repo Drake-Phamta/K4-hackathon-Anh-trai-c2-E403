@@ -412,16 +412,22 @@ Cần embedding để tách. **Đã đưa vào backlog (slide 6).** Ghi nhận t
 
 ### Phân công theo lãnh thổ file
 
+Danh sách đầy đủ: [`TEAMMATES.md`](TEAMMATES.md). Nhóm **4 người trên 6 vai** nên hai thành viên kiêm hai vai.
+
 | Vai | Tên (mã HV) | Lãnh thổ file |
 |---|---|---|
-| P1 · Product Owner & Spec Keeper | ⚠️ **TODO điền trước CP5** | `spec.md`, `README.md` |
-| P2 · Data & Evidence | ⚠️ **TODO** | `eval/verify-evidence.py`, `eval/evidence-report.md`, `analyze_chatlog.py`, `extract_failed_cases.py` |
-| P3 · AI/Prompt Engineer | ⚠️ **TODO** | `codebase/core.mjs`, `codebase/server.mjs` |
-| P4 · QA & Golden Set | ⚠️ **TODO** | `eval/golden-set.json`, `eval/run-golden.mjs`, `codebase/test-*.mjs` |
-| P5 · UI/UX Builder | ⚠️ **TODO** | `codebase/prototype*.html`, `codebase/ui.mjs`, `codebase/viewer.mjs` |
-| P6 · Demo & Validation | ⚠️ **TODO** | `validation/`, `demo-slides.html`, `demo-script.md` |
+| P1 · Product Owner & Spec Keeper | **Phạm Tuấn Anh** (2A202601840) | `spec.md`, `README.md`, `TEAMMATES.md` |
+| P2 · Data & Evidence | **Ngô Ngọc Quyền** (2A202601928) | `eval/verify-evidence.py`, `eval/evidence-report.md`, `analyze_chatlog.py`, `extract_failed_cases.py` |
+| P3 · AI/Prompt Engineer | **Nguyễn Kỳ Anh** (2A202601558) | `codebase/core.mjs`, `codebase/server.mjs`, `api/main.py` |
+| P4 · QA & Golden Set | **Bế Quốc Khánh** (2A202601463) | `eval/golden-set.json`, `eval/run-golden.mjs`, `codebase/test-*.mjs`, `web/e2e/vlearn.spec.ts` |
+| P5 · UI/UX Builder *(kiêm)* | **Nguyễn Kỳ Anh** (2A202601558) | `codebase/prototype*.html`, `codebase/ui.mjs`, `codebase/viewer.mjs`, `web/` |
+| P6 · Demo & Validation *(kiêm)* | **Bế Quốc Khánh** (2A202601463) | `validation/`, `demo-slides.html`, `demo-script.md` |
 
-*Git history hiện có: `NguyenKyAnh-20225783` (core.mjs, prototype.html) và `Drake-Phamta` (spec.md, eval/). Cả nhóm chia lại cho đều trước CP5 — **vibe-coding rule**: CP5 bốc ngẫu nhiên, không giải thích được phần có tên mình → 0 điểm phần đó.*
+**Cách ghép vai không tuỳ tiện:** P3+P5 đều là code chạy — engine và UI dùng chung `core.mjs` qua seam, nên sửa lõi là cả hai cùng ăn; gộp về một người thì không còn cảnh hai bản UI trôi khỏi nhau (§9 ghi lại hai lần chuyện đó xảy ra). P4+P6 đều là kiểm chứng — bộ đo máy chấm và vòng test với người thật là hai nửa của cùng một câu hỏi, và §7 cho thấy chúng bắt được những lỗi khác nhau: bộ 51 case không chạm tới case *"tạo quiz"* mà người thử tự gõ ra ngay.
+
+*Chấm D8 giao cho **P2 và P1** — cố ý không phải P4/P6, vì người xây golden set tự chấm output của chính bộ đo mình viết thì mất tính độc lập.*
+
+*⚠️ **Vibe-coding rule**: CP5 bốc ngẫu nhiên một người, không giải thích được phần có tên mình → 0 điểm phần đó. Trước CP5 mỗi người mở đúng file mình đứng tên ở bảng trên.*
 
 ### Willing users (≥3 tên) + kế hoạch validation CP5
 

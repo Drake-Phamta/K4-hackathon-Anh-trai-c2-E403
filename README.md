@@ -13,20 +13,22 @@
 
 ## Thành viên & phân công theo lãnh thổ file
 
-⚠️ **Tên thật + mã HV: điền trước CP5.** Chia lại cho đều — **vibe-coding rule**: CP5
-bốc ngẫu nhiên một người, không giải thích được phần có tên mình thì phần đó 0 điểm.
-Câu hỏi tự soát cho từng vai: xem file tương ứng trong [reflection/](reflection/).
+Danh sách đầy đủ kèm MSSV: **[TEAMMATES.md](TEAMMATES.md)**. Nhóm 4 người trên 6 vai nên
+hai thành viên kiêm hai vai — **vibe-coding rule**: CP5 bốc ngẫu nhiên một người, không
+giải thích được phần có tên mình thì phần đó 0 điểm. Câu hỏi tự soát cho từng vai: xem
+file tương ứng trong [reflection/](reflection/).
 
 | Vai | Tên (mã HV) | Lãnh thổ file — chịu trách nhiệm giải thích được |
 |---|---|---|
-| **P1** · Product Owner & Spec Keeper | ⚠️ TODO | `spec.md` · `README.md` |
-| **P2** · Data & Evidence | ⚠️ TODO | `eval/verify-evidence.py` · `eval/evidence-report.md` · `analyze_chatlog.py` · `extract_failed_cases.py` |
-| **P3** · AI/Prompt Engineer | ⚠️ TODO | `codebase/core.mjs` · `codebase/server.mjs` |
-| **P4** · QA & Golden Set | ⚠️ TODO | `eval/golden-set.json` · `eval/run-golden.mjs` · `codebase/test-core.mjs` · `codebase/test-intents.mjs` |
-| **P5** · UI/UX Builder | ⚠️ TODO | `codebase/prototype.html` · `codebase/ui.mjs` · `codebase/viewer.mjs` |
-| **P6** · Demo & Validation | ⚠️ TODO | `validation/` · `demo-slides.html` · `demo-script.md` |
+| **P1** · Product Owner & Spec Keeper | Phạm Tuấn Anh (2A202601840) | `spec.md` · `README.md` · `TEAMMATES.md` |
+| **P2** · Data & Evidence | Ngô Ngọc Quyền (2A202601928) | `eval/verify-evidence.py` · `eval/evidence-report.md` · `analyze_chatlog.py` · `extract_failed_cases.py` |
+| **P3** · AI/Prompt Engineer | Nguyễn Kỳ Anh (2A202601558) | `codebase/core.mjs` · `codebase/server.mjs` · `api/main.py` |
+| **P4** · QA & Golden Set | Bế Quốc Khánh (2A202601463) | `eval/golden-set.json` · `eval/run-golden.mjs` · `codebase/test-core.mjs` · `codebase/test-intents.mjs` · `web/e2e/vlearn.spec.ts` |
+| **P5** · UI/UX Builder | Nguyễn Kỳ Anh (2A202601558) | `codebase/prototype.html` · `codebase/ui.mjs` · `codebase/viewer.mjs` · `web/` |
+| **P6** · Demo & Validation | Bế Quốc Khánh (2A202601463) | `validation/` · `demo-slides.html` · `demo-script.md` |
 
-*Git history hiện có: `NguyenKyAnh-20225783` (core.mjs, prototype.html) · `Drake-Phamta` (spec.md, eval/).*
+*Cách ghép vai: **P3+P5** đều là code chạy (engine và UI dùng chung `core.mjs` qua seam);
+**P4+P6** đều là kiểm chứng (bộ đo máy chấm + kiểm chứng với người thật).*
 
 ## Chạy thử trong 2 phút
 
@@ -69,11 +71,14 @@ Một case chưa đạt (`G06` · turn `T0115`) — nguyên nhân phân tích tr
 ## Cấu trúc repo
 
 ```
+├── TEAMMATES.md         ← thành viên + MSSV + phân công theo vai
 ├── spec.md              ← AI Spec §1–§9 · quality bar
-├── demo-slides.html     ← 6 trang · Ctrl+P → demo-slides.pdf
+├── demo-slides.html     ← 9 trang · Ctrl+P → demo-slides.pdf
 ├── demo-script.md       ← kịch bản demo + Q&A đã chuẩn bị
 ├── codebase/            ← prototype (bản Console) + proxy LLM + test
-├── eval/                ← golden set 56 case · runner · các lượt đo · trace log · script bằng chứng
+├── web/                 ← bản Next.js của cùng lát cắt (engine dùng chung)
+├── api/                 ← proxy FastAPI cho LLM + STT/TTS
+├── eval/                ← golden set 63 case · runner · các lượt đo · trace log · script bằng chứng
 ├── validation/          ← protocol + task card + feedback log (chạy sáng N2)
 ├── reflection/          ← mỗi người 1 file
 └── data/                ← data pack của khoá (BTC cấp)
@@ -121,6 +126,7 @@ Một repo nhóm, cấu trúc như sau. Spec chốt lúc 23:59 ngày 1; bản ho
 ```
 repo/
 ├── README.md          ← thành viên (mã HV + tên) + phân công có tên từng phần
+├── TEAMMATES.md       ← danh sách thành viên + MSSV (dạng bảng, tool quét được)
 ├── spec.md            ← AI Spec theo 03-template-ai-spec.md
 ├── demo-slides.pdf    ← slide 6 trang theo 02-guide.md §5.1
 ├── codebase/          ← prototype (ghi rõ phần nào mock)

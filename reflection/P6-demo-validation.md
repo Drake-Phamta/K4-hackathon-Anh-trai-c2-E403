@@ -1,6 +1,6 @@
 # Reflection — P6 · Demo & Validation
 
-**Tên (mã HV):** ⚠️ TODO
+**Tên (mã HV):** Bế Quốc Khánh — 2A202601463 *(kiêm P4)*
 **Vai:** P6 · Demo & Validation
 
 ## 1. Phần mình làm

@@ -1,6 +1,6 @@
 # Reflection — P3 · AI/Prompt Engineer
 
-**Tên (mã HV):** ⚠️ TODO
+**Tên (mã HV):** Nguyễn Kỳ Anh — 2A202601558
 **Vai:** P3 · AI/Prompt Engineer
 
 ## 1. Phần mình làm

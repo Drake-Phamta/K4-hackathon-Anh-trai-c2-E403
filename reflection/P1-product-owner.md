@@ -1,6 +1,6 @@
 # Reflection — P1 · Product Owner & Spec Keeper
 
-**Tên (mã HV):** ⚠️ TODO
+**Tên (mã HV):** Phạm Tuấn Anh — 2A202601840
 **Vai:** P1 · Product Owner & Spec Keeper
 
 ## 1. Phần mình làm

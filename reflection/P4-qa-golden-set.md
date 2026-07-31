@@ -1,6 +1,6 @@
 # Reflection — P4 · QA & Golden Set
 
-**Tên (mã HV):** ⚠️ TODO
+**Tên (mã HV):** Bế Quốc Khánh — 2A202601463
 **Vai:** P4 · QA & Golden Set
 
 ## 1. Phần mình làm
