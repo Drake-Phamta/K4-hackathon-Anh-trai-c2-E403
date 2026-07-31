@@ -28,7 +28,19 @@ export const DECISION = {
      phải "có căn cứ" — người dùng cần biết câu này KHÔNG kiểm chứng được
      bằng slide đang mở. */
   outside_document: { label: 'ngoài tài liệu ⚠️', icon: '⚠', tone: 'warn' },
+  /* Nhánh thứ 6 (CONTRACT v1.2) — trò chuyện, không tra tài liệu.
+     Trước đây lời chào bị dán "? cần làm rõ 30%": trả lời thì đúng mà nhãn thì
+     vô lý — chào hỏi có gì mà phải làm rõ. Gộp xã giao vào `clarify` là tiện
+     cho code, không tiện cho người đọc. `citations` bắt buộc rỗng. */
+  chat: { label: 'trò chuyện', icon: '💬', tone: 'mute' },
 };
+
+/* Không có nhãn thì KHÔNG được để nổ. `DECISION[res.decision]` trần từng làm
+   prototype.html ném TypeError, và UI hiển thị nó thành "Lỗi core: Cannot read
+   properties of undefined" — một lỗ hổng bản đồ nhãn bị báo nhầm thành lỗi nhân
+   AI. Thêm giá trị mới vào hợp đồng mà quên sửa đây là hỏng cả màn hình. */
+export const decisionBadge = d =>
+  DECISION[d] ?? { label: String(d || 'không rõ'), icon: '•', tone: 'mute' };
 
 /* ══════════════════════════════════════════════════════════════════════════
    FOLLOW-UP — chip gợi ý và chip HÀNH ĐỘNG

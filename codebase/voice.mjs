@@ -63,12 +63,28 @@ export function encodeWav(chunks, inputRate, targetRate = 16000){
   return new Blob([buf], { type: 'audio/wav' });
 }
 
+/* ── VAD cho chế độ hội thoại — CHỈNH THEO PHÒNG demo nếu cần ─────────────
+   RMS sau AGC: giọng nói thường 0.05-0.3, nền phòng lặng 0.005-0.02.
+   BARGE cao hơn VOICE có chủ đích: lúc loa đang phát, tiếng dội vào mic
+   (dù đã echoCancellation) không được phép tự cắt lời chính nó. */
+const VAD = {
+  VOICE: 0.02,        // ngưỡng coi là "có tiếng người"
+  BARGE: 0.055,       // ngưỡng ngắt lời khi TTS đang phát
+  START_MS: 120,      // có tiếng liên tục bấy nhiêu → bắt đầu một lượt nói
+  BARGE_MS: 250,      // đòi lâu hơn để ngắt lời (chống echo giật cục)
+  END_MS: 700,        // im lặng bấy nhiêu → coi là hết câu
+  MIN_MS: 400,        // phần CÓ TIẾNG tối thiểu, ngắn hơn thì bỏ (ho, cạch bàn)
+  MAX_MS: 30000,      // trần một lượt nói
+  PREROLL_MS: 300,    // giữ lại đoạn ngay trước lúc phát hiện — không cụt đầu từ
+};
+
 export function createVoice({ onState, onTimer, onLevel } = {}){
   let stream = null, ac = null, proc = null, chunks = [];
   let timerId = 0, seconds = 0;
   let analyser = null, levelRaf = 0;
   let audioEl = null;
   let state = 'idle';                          // idle|recording|processing|speaking
+  let convo = false, cStream = null, cAc = null, cProc = null;
 
   const setState = s => { if (s !== state){ state = s; onState?.(s); } };
 
@@ -173,30 +189,33 @@ export function createVoice({ onState, onTimer, onLevel } = {}){
     return out;
   }
 
-  const ttsCache = new Map();                  // text → Promise<Blob>
-  function fetchTts(text){
-    if (!ttsCache.has(text)){
+  /* opts (tuỳ chọn, server whitelist + kẹp biên): {speed, speaker_id, num_step}.
+     Mặc định để trống — server đọc TTS_SPEED/TTS_SPEAKER/TTS_NUM_STEP từ .env. */
+  const ttsCache = new Map();                  // key (text+opts) → Promise<Blob>
+  function fetchTts(text, opts = {}){
+    const key = text + ' ' + JSON.stringify(opts);   // đổi giọng không dính cache cũ
+    if (!ttsCache.has(key)){
       const p = (async () => {
         const r = await fetch('/api/tts', {
           method:'POST', headers:{ 'content-type':'application/json' },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, ...opts }),
         }).catch(() => { throw new Error('tts_unreachable'); });
         if (!r.ok || !(r.headers.get('content-type') || '').includes('audio'))
           throw new Error((await r.json().catch(() => null))?.error ?? 'tts_failed');
         return r.blob();
       })();
-      p.catch(() => ttsCache.delete(text));    // lỗi thì đừng găm vào cache
+      p.catch(() => ttsCache.delete(key));     // lỗi thì đừng găm vào cache
       if (ttsCache.size >= 40) ttsCache.delete(ttsCache.keys().next().value);
-      ttsCache.set(text, p);
+      ttsCache.set(key, p);
     }
-    return ttsCache.get(text);
+    return ttsCache.get(key);
   }
 
   /* Sưởi cache trước khi người dùng bấm 🔊 — chỉ câu đầu, phần còn lại để
      pipeline lo trong lúc phát. Nuốt lỗi: prefetch hỏng thì speak() báo sau. */
-  function prefetch(text){
+  function prefetch(text, opts = {}){
     const clean = stripMd(text).slice(0, 900);
-    if (clean) fetchTts(splitSentences(clean)[0]).catch(() => {});
+    if (clean) fetchTts(splitSentences(clean)[0], opts).catch(() => {});
   }
 
   function playBlob(blob){
@@ -218,7 +237,7 @@ export function createVoice({ onState, onTimer, onLevel } = {}){
   }
 
   let speakToken = 0;                          // tăng = mọi lượt speak cũ tự rút lui
-  async function speak(text){
+  async function speak(text, opts = {}){
     stopSpeaking();
     const clean = stripMd(text).slice(0, 900);
     if (!clean) return;
@@ -226,11 +245,11 @@ export function createVoice({ onState, onTimer, onLevel } = {}){
     const token = ++speakToken;
     setState('speaking');
     try{
-      let next = fetchTts(chunks[0]);
+      let next = fetchTts(chunks[0], opts);
       for (let i = 0; i < chunks.length; i++){
         const blob = await next;
         if (token !== speakToken) return;      // bị cắt trong lúc chờ tổng hợp
-        if (i + 1 < chunks.length) next = fetchTts(chunks[i + 1]);   // gối đầu
+        if (i + 1 < chunks.length) next = fetchTts(chunks[i + 1], opts);   // gối đầu
         await playBlob(blob);
         if (token !== speakToken) return;      // bị cắt trong lúc phát
       }
@@ -247,6 +266,84 @@ export function createVoice({ onState, onTimer, onLevel } = {}){
     a._done?.();                               // resolve playBlob đang treo
   }
 
+  /* ── chế độ HỘI THOẠI: mic mở liên tục, VAD cắt câu, barge-in ─────────
+     Khác bấm–nói–bấm ở đúng một điều: KHÔNG đóng mic giữa các lượt. Người
+     dùng nói tự nhiên, im ~0,7s là máy hiểu đã hết câu; máy đang đọc mà
+     người dùng mở miệng (đủ to, đủ 250ms — chống echo loa dội) là máy im
+     ngay và nghe. Mỗi lượt cắt ra vẫn là một request STT — bài học §9
+     "một lần ghi = một request" giữ nguyên, chỉ tự động hoá cái nút bấm. */
+  async function startConversation({ onUtterance, onHearing } = {}){
+    if (convo) return;
+    if (state === 'recording' || state === 'processing') throw new Error('busy');
+    cStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    });
+    try{ cAc = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 }); }
+    catch{ cAc = new (window.AudioContext || window.webkitAudioContext)(); }
+    convo = true;
+    const src = cAc.createMediaStreamSource(cStream);
+    /* 1024 mẫu ≈ 64ms @16kHz — đủ mịn cho START_MS 120ms; 4096 thì mỗi
+       block đã 256ms, VAD phản ứng thô */
+    cProc = cAc.createScriptProcessor(1024, 1, 1);
+    const bm = 1024 / cAc.sampleRate * 1000;       // ms mỗi block
+    const preN = Math.ceil(VAD.PREROLL_MS / bm);
+    let pre = [], utter = [], inUtter = false;
+    let voicedMs = 0, silentMs = 0, utterMs = 0, voicedTotal = 0;
+
+    cProc.onaudioprocess = e => {
+      if (!convo) return;
+      const block = new Float32Array(e.inputBuffer.getChannelData(0));
+      let sum = 0;
+      for (let i = 0; i < block.length; i++) sum += block[i] * block[i];
+      const rms = Math.sqrt(sum / block.length);
+      const tts = !!audioEl;                       // TTS đang phát → ngưỡng chống echo
+      if (!inUtter){
+        pre.push(block);
+        if (pre.length > preN) pre.shift();
+        if (rms > (tts ? VAD.BARGE : VAD.VOICE)){
+          voicedMs += bm;
+          if (voicedMs >= (tts ? VAD.BARGE_MS : VAD.START_MS)){
+            if (tts) stopSpeaking();               // barge-in: người nói là máy im
+            inUtter = true;
+            utter = pre.slice(); pre = [];         // pre-roll — không cụt đầu từ
+            silentMs = 0; utterMs = voicedTotal = voicedMs;
+            onHearing?.(true);
+          }
+        } else voicedMs = 0;
+      } else {
+        utter.push(block); utterMs += bm;
+        if (rms > VAD.VOICE){ voicedTotal += bm; silentMs = 0; }
+        else silentMs += bm;
+        if (silentMs >= VAD.END_MS || utterMs >= VAD.MAX_MS){
+          const blocks = utter, voiced = voicedTotal;
+          inUtter = false;
+          utter = []; voicedMs = silentMs = utterMs = voicedTotal = 0;
+          onHearing?.(false);
+          if (voiced >= VAD.MIN_MS) finishUtter(blocks);   // ngắn quá = ho/cạch bàn, bỏ
+        }
+      }
+    };
+    const mute = cAc.createGain(); mute.gain.value = 0;    // gain 0: mic không dội ra loa
+    src.connect(cProc); cProc.connect(mute); mute.connect(cAc.destination);
+
+    async function finishUtter(blocks){
+      const rate = cAc?.sampleRate ?? 16000;
+      try{
+        const text = (await transcribe(encodeWav(blocks, rate))).trim();
+        if (text && convo) onUtterance?.(text);
+      }catch(err){ console.error('[hội thoại · stt]', err); }
+    }
+  }
+
+  function stopConversation(){
+    if (!convo) return;
+    convo = false;
+    try{ cProc?.disconnect(); }catch{}
+    cProc = null;
+    cStream?.getTracks().forEach(t => t.stop()); cStream = null;   // icon mic trình duyệt tắt thật
+    cAc?.close().catch(() => {}); cAc = null;
+  }
+
   /* ── dò dịch vụ — UI tắt mic kèm tooltip khi voice chết (G2) ────────── */
   async function probeHealth(){
     try{
@@ -257,9 +354,11 @@ export function createVoice({ onState, onTimer, onLevel } = {}){
 
   return {
     startRecording, stopRecording, transcribe, speak, stopSpeaking, prefetch, probeHealth,
+    startConversation, stopConversation,
     stripMd,
     get state(){ return state; },
     get recording(){ return state === 'recording'; },
     get speaking(){ return state === 'speaking'; },
+    get conversing(){ return convo; },
   };
 }

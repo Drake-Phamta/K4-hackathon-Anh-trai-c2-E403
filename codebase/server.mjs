@@ -61,6 +61,23 @@ const VOICE_BASE = (ENV.VOICE_API_URL || 'https://aitools.ptit.edu.vn/holobox').
 const _vt = Number(ENV.VOICE_TIMEOUT);
 const VOICE_TIMEOUT = Number.isFinite(_vt) && _vt > 0 ? Math.round(_vt * 1000) : 30000;
 
+/* Cấu hình giọng đọc — schema thật của API (GET /openapi.json, đọc 31/07):
+   speed 0.25-4 (mặc định UPSTREAM là 0.8 — chậm lề mề, mình ép 1.0),
+   speaker_id preset (speaker_01 mặc định, speaker_02 có thật),
+   num_step 1-64 bước khử nhiễu (giảm = nhanh lên rõ, đổi chất lượng).
+   Đổi giọng/tốc độ không cần sửa code: TTS_SPEED / TTS_SPEAKER / TTS_NUM_STEP
+   trong .env. Client được ghi đè qua body nhưng chỉ đúng 3 field này, có kẹp
+   biên — không forward mù payload người dùng lên upstream. */
+const clampNum = (v, lo, hi) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : undefined;
+};
+const TTS_DEFAULTS = {
+  speed:      clampNum(ENV.TTS_SPEED, 0.25, 4) ?? 1.0,
+  speaker_id: (ENV.TTS_SPEAKER || '').trim() || undefined,
+  num_step:   clampNum(ENV.TTS_NUM_STEP, 1, 64),
+};
+
 const MIME = {
   '.html':'text/html; charset=utf-8', '.mjs':'text/javascript; charset=utf-8',
   '.js':'text/javascript; charset=utf-8', '.css':'text/css; charset=utf-8',
@@ -197,14 +214,22 @@ async function callSTT(wavBuf){
   }finally{ clearTimeout(timer); }
 }
 
-async function callTTS(text){
+async function callTTS(text, opts = {}){
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), VOICE_TIMEOUT);
   try{
+    const payload = { text };
+    const speed      = clampNum(opts.speed, 0.25, 4) ?? TTS_DEFAULTS.speed;
+    const num_step   = clampNum(opts.num_step, 1, 64) ?? TTS_DEFAULTS.num_step;
+    const speaker_id = (typeof opts.speaker_id === 'string' && opts.speaker_id.trim().slice(0, 100))
+                     || TTS_DEFAULTS.speaker_id;
+    if (speed      !== undefined) payload.speed = speed;
+    if (num_step   !== undefined) payload.num_step = num_step;
+    if (speaker_id !== undefined) payload.speaker_id = speaker_id;
     const r = await fetch(`${VOICE_BASE}/synthesize`, {
       method:'POST', signal: ctl.signal,
       headers:{ 'content-type':'application/json' },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify(payload),
     });
     if (!r.ok){
       const detail = (await r.text().catch(() => '')).slice(0, 300);
@@ -326,7 +351,7 @@ createServer(async (req, res) => {
     catch{ return json(res, 400, { error:'bad_json' }); }
     const text = String(body.text ?? '').trim().slice(0, 900);   // trần như speak() cũ
     if (!text) return json(res, 400, { error:'empty_text' });
-    const out = await callTTS(text);
+    const out = await callTTS(text, body);   // callTTS tự whitelist + kẹp biên 3 field
     if (!out.ok) return json(res, 502, out);
     /* json() không dùng được cho binary — trả wav thô như serveStatic */
     res.writeHead(200, {

@@ -219,6 +219,7 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
     <span id="zl" style="font-family:var(--mono);color:var(--dim);min-width:38px;text-align:center;font-size:12px">—</span>
     <button class="btn sm" id="zi" disabled>+</button>
     <div class="sp"></div>
+    <button class="btn sm" id="lect" disabled>▶ Thuyết trình</button>
     <button class="btn sm" id="theme">◐</button>
     <button class="btn sm" id="dl">⬇ Log</button>
   </div>
@@ -251,6 +252,7 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
         <div id="row">
           <textarea id="q" rows="1" placeholder="Hỏi về nội dung slide… (Enter để gửi)" disabled></textarea>
           <button class="btn" id="mic" disabled>🎙</button>
+          <button class="btn" id="convo" disabled>🎧</button>
           <button class="btn pri" id="send" disabled>Gửi</button>
         </div>
         <div id="scen" class="hide">
@@ -272,8 +274,8 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
 <script type="module">
 import { createViewer, injectViewerCSS } from './viewer.mjs';
 import { askTutor, setDocIndex, getLog, attachFeedback, AI_CORE, initCore,
-         askOutside, buildHandoff } from './core.mjs';
-import { $, el, esc, md, DECISION, buildRequest, initTheme, downloadLog,
+         askOutside, buildHandoff, generateLecture } from './core.mjs';
+import { $, el, esc, md, decisionBadge, buildRequest, initTheme, downloadLog,
          renderFollowUps, copyText } from './ui.mjs';
 import { createVoice } from './voice.mjs';
 
@@ -313,10 +315,18 @@ const voice = createVoice({
 });
 function syncMic(){
   const m = $('#mic');
-  m.disabled = !(voiceOk && viewer.total) || micState === 'processing';
+  const dead = !(voiceOk && viewer.total);
+  m.disabled = dead || micState === 'processing';
   m.title = voiceOk
     ? 'Hỏi bằng giọng nói — bấm để ghi, bấm lần nữa để gửi'
     : 'Dịch vụ giọng nói (PTIT) không kết nối được — gõ câu hỏi thay nhé';
+  $('#convo').disabled = $('#lect').disabled = dead;
+  $('#convo').title = voiceOk
+    ? 'Hội thoại rảnh tay: nói tự nhiên, ngừng ~1 giây là máy trả lời; nói chen là máy im'
+    : 'Dịch vụ giọng nói (PTIT) không kết nối được';
+  $('#lect').title = voiceOk
+    ? 'AI thuyết trình tài liệu từ trang đang mở — nói chen hoặc bấm lại để dừng và hỏi'
+    : 'Dịch vụ giọng nói (PTIT) không kết nối được';
 }
 voice.probeHealth().then(ok => { voiceOk = ok; syncMic(); });
 
@@ -374,6 +384,170 @@ async function speakAnswer(btn, text){
     btn.textContent = '🔊 Đọc';
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   🎧 HỘI THOẠI + ▶ THUYẾT TRÌNH
+   ══════════════════════════════════════════════════════════════════════
+   Hội thoại: mic mở liên tục, VAD tự cắt câu (voice.mjs), trả lời tự đọc.
+   Thuyết trình: LLM soạn lời giảng từng trang từ chính text trang đó
+   (generateLecture — luật "chỉ dùng chữ trên trang"), TTS đọc, slide cuộn
+   theo, highlight câu nguyên văn. Nói chen hoặc bấm là DỪNG để hỏi — câu
+   hỏi đi qua send() bình thường nên hưởng trọn grounding + trích dẫn +
+   eval; mạch giảng được tiêm vào history (lectureCtx). Trả lời xong có
+   chip giảng tiếp đúng trang đang dở. */
+let convoOn = false, qaBusy = false, qaPending = null, lectureCtx = '';
+const lect = { on:false, page:1, resumeAt:0, prevSummary:'', nextGen:null };
+
+const lectLabel = t => { $('#lect').textContent = t; };
+const convoLabel = () => { $('#convo').textContent = convoOn ? '🎧 nghe' : '🎧'; };
+
+function pauseLecture(){
+  if (!lect.on) return;
+  lect.on = false;
+  lect.resumeAt = lect.page;
+  voice.stopSpeaking();
+  $('#lect').classList.remove('on');
+  lectLabel(`▶ Giảng tiếp Tr.${lect.resumeAt}`);
+}
+function stopLecture(){
+  lect.on = false; lect.resumeAt = 0; lect.prevSummary = ''; lect.nextGen = null;
+  lectureCtx = '';
+  $('#lect').classList.remove('on');
+  lectLabel('▶ Thuyết trình');
+}
+
+/* Lời giảng hiện thành bubble trong log — người nghe đối chiếu được bằng
+   mắt, và nhãn mock/mock-fallback nói thật khi đang đọc nguyên văn (G2). */
+function addLectureNote(p, gen){
+  const m = el('div','msg a'), b = el('div','bub');
+  const tag = gen.core_used === 'real' ? '' : ` · ${gen.core_used}`;
+  b.innerHTML = `<span style="color:var(--faint);font-family:var(--mono);font-size:11px">🎓 Đang giảng Tr.${p}${tag}</span><br>${md(gen.script)}`;
+  m.append(b); $('#log').append(m); scroll();
+}
+
+async function runLecture(){
+  while (lect.on && lect.page <= viewer.total){
+    const p = lect.page;
+    lectLabel(`⏸ Đang giảng Tr.${p}`);
+    viewer.goTo(p);
+    await viewer.settled();
+    if (!lect.on) return;
+
+    /* script: dùng bản đã soạn trước trong lúc đọc trang trước, nếu đúng trang */
+    let gen;
+    try{
+      gen = (lect.nextGen?.page === p)
+        ? await lect.nextGen.promise
+        : await generateLecture({ pageNum:p, pageText: viewer.pageText(p), docTitle: docName, prevSummary: lect.prevSummary });
+    }catch(err){ console.error('[lecture]', err); toast('Không soạn được lời giảng — dừng'); return pauseLecture(); }
+    lect.nextGen = null;
+    if (!lect.on) return;
+
+    if (!gen.script){                       // trang scan/trống — skip có nhãn, không giảng mò
+      toast(`Trang ${p} không có chữ đọc được — bỏ qua`);
+      lect.page = p + 1;
+      continue;
+    }
+
+    lect.prevSummary = gen.summary;
+    lectureCtx = `(đang thuyết trình ${docName}; vừa giảng Trang ${p}: ${gen.summary})`;
+    addLectureNote(p, gen);
+
+    /* highlight CHỈ quote nguyên văn thật — chống bịa cho cả phần nhìn */
+    const pt = viewer.pageText(p).replace(/\s+/g, ' ');
+    const q0 = (gen.key_quotes ?? []).map(q => q.replace(/\s+/g, ' ').trim()).find(q => q && pt.includes(q));
+    if (q0) viewer.highlight(p, q0);
+
+    /* soạn + sưởi TTS trang KẾ trong lúc đang đọc trang này — không có
+       khoảng lặng giữa hai trang */
+    const np = p + 1;
+    if (np <= viewer.total){
+      const promise = generateLecture({ pageNum:np, pageText: viewer.pageText(np), docTitle: docName, prevSummary: gen.summary })
+        .then(g => { if (g.script && voiceOk) voice.prefetch(g.script); return g; })
+        .catch(() => null);
+      lect.nextGen = { page: np, promise };
+    }
+
+    try{ await voice.speak(gen.script); }
+    catch(err){ console.error('[lecture tts]', err); toast('Giọng nói lỗi — tạm dừng thuyết trình'); return pauseLecture(); }
+    if (!lect.on) return;                   // bị chen ngang trong lúc đọc → đã pause
+    lect.page = p + 1;
+  }
+  if (lect.on){ stopLecture(); toast('🎓 Đã giảng hết tài liệu'); }
+}
+
+async function startLecture(){
+  if (lect.on || !viewer.total || !voiceOk) return;
+  lect.on = true;
+  lect.page = lect.resumeAt || viewer.page || 1;
+  lect.resumeAt = 0;
+  $('#lect').classList.add('on');
+  /* Mở tai nghe hội thoại để NGẮT BẰNG LỜI; không có quyền mic thì vẫn
+     giảng được, ngắt bằng nút */
+  if (!convoOn){ try{ await startConvoSession(); }catch{ toast('Không có mic — ngắt thuyết trình bằng nút ▶'); } }
+  runLecture();
+}
+
+$('#lect').onclick = () => { lect.on ? pauseLecture() : startLecture(); };
+
+/* ── phiên hội thoại: utterance → hỏi → tự đọc trả lời ─────────────── */
+async function handleUtter(text){
+  if (qaBusy){ qaPending = text; return; }  // giữ câu MỚI NHẤT, không xếp hàng dài
+  qaBusy = true;
+  convoLabel();
+  try{
+    $('#q').value = text;
+    const res = await send();
+    if (res?.answer && (convoOn || lect.resumeAt)){
+      try{ await voice.speak(res.answer); }
+      catch(err){ console.error('[voice]', err); toast('Không đọc được — dịch vụ TTS lỗi'); }
+    }
+  }finally{ qaBusy = false; }
+  if (qaPending){ const t = qaPending; qaPending = null; return handleUtter(t); }
+  /* Đang dở bài giảng → mời giảng tiếp bằng chip (người quyết, máy không tự) */
+  if (lect.resumeAt && !$('#log').querySelector('.resume-lect')){
+    const s = el('div','starter resume-lect');
+    const b = el('button','fu act', `▶ Giảng tiếp từ Trang ${lect.resumeAt}`);
+    b.onclick = () => { s.remove(); startLecture(); };
+    const x = el('button','fu', 'Thôi, dừng thuyết trình');
+    x.onclick = () => { s.remove(); stopLecture(); };
+    s.append(b, x); $('#log').append(s); scroll();
+  }
+}
+
+async function startConvoSession(){
+  await voice.startConversation({
+    onUtterance: handleUtter,
+    onHearing: h => {
+      /* Người mở miệng khi đang giảng → dừng NGAY từ lúc phát hiện giọng,
+         không đợi STT xong — cảm giác "nó nghe mình thật" nằm ở đây */
+      if (h && lect.on) pauseLecture();
+      $('#convo').textContent = h ? '🎙 …' : (convoOn ? '🎧 nghe' : '🎧');
+    },
+  });
+  convoOn = true;
+  $('#convo').classList.add('on');
+  convoLabel();
+}
+
+$('#convo').onclick = async () => {
+  if (!convoOn){
+    try{
+      await startConvoSession();
+      toast('Hội thoại rảnh tay: nói tự nhiên, ngừng ~1 giây là mình trả lời. Nói chen khi mình đang đọc là mình im ngay. Bấm 🎧 để tắt.', 4200);
+    }catch(err){
+      console.error('[convo]', err);
+      toast('Không có quyền micro — cấp quyền trong trình duyệt rồi thử lại');
+    }
+  } else {
+    voice.stopConversation();
+    voice.stopSpeaking();
+    convoOn = false; qaPending = null;
+    $('#convo').classList.remove('on');
+    convoLabel();
+    if (lect.on) pauseLecture();
+  }
+};
 
 /* ── viewer ────────────────────────────────────────────────────────── */
 const viewer = createViewer({
@@ -461,7 +635,7 @@ function addAI(res, node, req){
   });
   d.append(ol); node.append(d);
 
-  const info = DECISION[res.decision];
+  const info = decisionBadge(res.decision);
   const bd = el('div','bd');
   bd.append(el('span', 'badge ' + info.tone, `${info.icon} ${info.label}`));
   bd.append(el('span','badge cf', 'tin cậy ' + Math.round(res.confidence * 100) + '%'));
@@ -474,6 +648,23 @@ function addAI(res, node, req){
     c.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-weight:560';
     c.innerHTML = md(res.clarifying_question);
     b.append(c);
+  }
+  /* Phần NGOÀI TÀI LIỆU — phải nhìn là biết ngay nó khác loại với phần trên.
+     `outside_note` đã nằm trong hợp đồng từ v1.1 nhưng chưa bao giờ được vẽ ra;
+     giờ nhánh ① đính câu trả lời kiến thức chung vào đây để người hỏi không bị
+     bỏ rơi. Viền vàng + nhãn là thứ giữ cho hai phần không lẫn vào nhau. */
+  if (res.outside_note){
+    const o = el('div');
+    o.style.cssText = 'margin-top:10px;padding:9px 11px;border-left:3px solid var(--warn);' +
+                      'background:color-mix(in srgb, var(--warn) 8%, transparent);border-radius:0 6px 6px 0';
+    const tag = el('div');
+    tag.style.cssText = 'font-size:11px;font-weight:700;color:var(--warn);margin-bottom:5px;letter-spacing:.02em';
+    tag.textContent = '⚠ NGOÀI TÀI LIỆU — không đối chiếu được bằng slide đang mở';
+    o.append(tag);
+    const body = el('div');
+    body.innerHTML = md(res.outside_note);
+    o.append(body);
+    b.append(o);
   }
   node.append(b);
 
@@ -593,7 +784,12 @@ async function send(){
   try{
     const request = buildRequest({
       question: q, selection: s, viewer, docName,
-      history: getLog().slice(-4).map(l => ({ role:'user', content:l.request.question })),
+      /* Đang/vừa thuyết trình thì tiêm mạch giảng vào history — "cái này/
+         phần này" trong câu hỏi chen ngang tự neo đúng chỗ đang giảng. */
+      history: [
+        ...getLog().slice(-4).map(l => ({ role:'user', content:l.request.question })),
+        ...(lectureCtx ? [{ role:'assistant', content: lectureCtx }] : []),
+      ],
     });
     const res = await askTutor(request);
     addAI(res, node, request);
@@ -601,8 +797,10 @@ async function send(){
        đầu ngay lúc này, bấm 🔊 là ra tiếng liền. Chỉ khi hỏi bằng giọng,
        để không tốn request TTS cho người chỉ gõ phím. */
     if (fromVoice && voiceOk) voice.prefetch(res.answer);
+    return res;
   }catch(err){
     node.replaceChildren(el('div','bub','Lỗi core: ' + err.message));
+    return null;
   }
 }
 
