@@ -1,0 +1,3791 @@
+{
+  "at": "2026-07-30T22:32:43.132Z",
+  "core": {
+    "core": "real",
+    "model": "gemma-4",
+    "error": null
+  },
+  "luu_y_bao_mat": "page_text chỉ lưu độ dài + sha1, không lưu nguyên văn nội dung slide (README quy định 3).",
+  "turns": [
+    {
+      "id": "G01",
+      "class": "①",
+      "source_turn_id": null,
+      "request": {
+        "question": "LangGraph có hỗ trợ streaming không?",
+        "selection": null,
+        "page_text": {
+          "len": 334,
+          "sha1": "5148d10808f6"
+        },
+        "current_page": 30
+      },
+      "response": {
+        "decision": "no_grounding",
+        "confidence": 0.08,
+        "citations": [
+          {
+            "page": 30,
+            "quote": "Từ ReAct Đến LangGraph State Input LLM Node Tool Node Final Answer tool call observation Conditional Edge continue done"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Trả lời ngoài tài liệu ⚠️",
+            "kind": "action",
+            "action": "answer_outside"
+          },
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          },
+          {
+            "label": "Hỏi lại về nội dung có trong slide",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": "tài liệu không chứa: streaming",
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 7,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 30 (334 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 3 từ khoá → 2 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "kiểm phủ",
+            "detail": "thiếu trọng tâm: \"streaming\" · có: \"langgraph\"",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG đủ căn cứ ① — từ chối, không đoán",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G02",
+      "class": "①",
+      "source_turn_id": null,
+      "request": {
+        "question": "Deck này nói gì về multi-agent orchestration?",
+        "selection": null,
+        "page_text": {
+          "len": 86,
+          "sha1": "9d9bfa801f48"
+        },
+        "current_page": 15
+      },
+      "response": {
+        "decision": "no_grounding",
+        "confidence": 0.08,
+        "citations": [
+          {
+            "page": 34,
+            "quote": "Debug Checklist Khi Agent Lỗi Nhìn vào trace trước"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Trả lời ngoài tài liệu ⚠️",
+            "kind": "action",
+            "action": "answer_outside"
+          },
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          },
+          {
+            "label": "Hỏi lại về nội dung có trong slide",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": "tài liệu không chứa: multi-agent",
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 15 (86 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 5 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "kiểm phủ",
+            "detail": "thiếu trọng tâm: \"multi-agent\" · có: \"multi\", \"agent\", \"orchestration\"",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG đủ căn cứ ① — từ chối, không đoán",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G03",
+      "class": "①",
+      "source_turn_id": null,
+      "request": {
+        "question": "Slide có hướng dẫn fine-tuning model không?",
+        "selection": null,
+        "page_text": {
+          "len": 364,
+          "sha1": "1380ba7bcade"
+        },
+        "current_page": 20
+      },
+      "response": {
+        "decision": "no_grounding",
+        "confidence": 0.08,
+        "citations": [
+          {
+            "page": 34,
+            "quote": "4 nơi thường phải sửa"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Trả lời ngoài tài liệu ⚠️",
+            "kind": "action",
+            "action": "answer_outside"
+          },
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          },
+          {
+            "label": "Hỏi lại về nội dung có trong slide",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": "tài liệu không chứa: fine-tuning",
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 20 (364 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 6 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "kiểm phủ",
+            "detail": "thiếu trọng tâm: \"fine-tuning\" · có: \"tuning\", \"model\"",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG đủ căn cứ ① — từ chối, không đoán",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G04",
+      "class": "①",
+      "source_turn_id": null,
+      "request": {
+        "question": "Có phần nào nói về human-in-the-loop không?",
+        "selection": null,
+        "page_text": {
+          "len": 266,
+          "sha1": "80350ca93f48"
+        },
+        "current_page": 37
+      },
+      "response": {
+        "decision": "no_grounding",
+        "confidence": 0.08,
+        "citations": [
+          {
+            "page": 36,
+            "quote": "Khía cạnh Chatbot thắng Agent thắng Tác vụ FAQ, support đơn giản, nội dung 1 lượt Nhanh, ít round-trip Booking, research, coding, data analysis nhiều"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Trả lời ngoài tài liệu ⚠️",
+            "kind": "action",
+            "action": "answer_outside"
+          },
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          },
+          {
+            "label": "Hỏi lại về nội dung có trong slide",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": "tài liệu không chứa: human-in-the-loop",
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 37 (266 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 4 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "kiểm phủ",
+            "detail": "thiếu trọng tâm: \"human-in-the-loop\" · có: \"human\"",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG đủ căn cứ ① — từ chối, không đoán",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G05",
+      "class": "①",
+      "source_turn_id": null,
+      "request": {
+        "question": "Chain-of-thought prompting được dùng thế nào ở đây?",
+        "selection": null,
+        "page_text": {
+          "len": 282,
+          "sha1": "641728d539f0"
+        },
+        "current_page": 21
+      },
+      "response": {
+        "decision": "no_grounding",
+        "confidence": 0.08,
+        "citations": [
+          {
+            "page": 14,
+            "quote": "Agent Patterns Nên Tăng Dần Theo Nhu Cầu Augmented LLM Prompt + docs + tools Prompt Chaining Bước nối tiếp rõ ràng Routing Chọn path / specialist"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Trả lời ngoài tài liệu ⚠️",
+            "kind": "action",
+            "action": "answer_outside"
+          },
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          },
+          {
+            "label": "Hỏi lại về nội dung có trong slide",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": "tài liệu không chứa: chain-of-thought",
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 21 (282 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 4 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "kiểm phủ",
+            "detail": "thiếu trọng tâm: \"chain-of-thought\" · có: \"thought\", \"prompting\"",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG đủ căn cứ ① — từ chối, không đoán",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G06",
+      "class": "①",
+      "source_turn_id": "T0115",
+      "request": {
+        "question": "điêu toa",
+        "selection": null,
+        "page_text": {
+          "len": 427,
+          "sha1": "88c504576e41"
+        },
+        "current_page": 12
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.5,
+        "citations": [
+          {
+            "page": 12,
+            "quote": "Bài toán 1 bước: hỏi đáp, tra FAQ, phân loại cơ bản"
+          },
+          {
+            "page": 12,
+            "quote": "Không có tool nào để gọi: agent chỉ “suy nghĩ” nhưng không hành động được"
+          },
+          {
+            "page": 12,
+            "quote": "Mọi thứ phải 100% deterministic: mỗi sai sót đều rất đắt"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 3077,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 12 (427 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 2 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 12 (TRANG ĐANG XEM, 427 ký tự) + Tr.8, Tr.20",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 1174 ký tự trả về",
+            "ms": 3075
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "5/5 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 5 trích dẫn · tin cậy 50%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": false,
+        "dims": {
+          "D1": true,
+          "D2": false,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": [
+          "tin cậy 0.50 > 0.2"
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "G07",
+      "class": "②",
+      "source_turn_id": null,
+      "request": {
+        "question": "cái này khác cái kia chỗ nào?",
+        "selection": null,
+        "page_text": {
+          "len": 266,
+          "sha1": "80350ca93f48"
+        },
+        "current_page": 37
+      },
+      "response": {
+        "decision": "clarify",
+        "confidence": 0.31,
+        "citations": [],
+        "follow_ups": [
+          {
+            "label": "Ý mình là Trang 37 — Hybrid Pattern: Thực Dụng Hơn Cực Đoan User ",
+            "kind": "question"
+          },
+          {
+            "label": "Ý mình là Trang 36 — Khi Nào Chatbot Thắng, Khi Nào Agent Thắng? ",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 37 (266 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 1 từ khoá → 0 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "mơ hồ ② — đại từ trỏ không rõ, không neo trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG đoán — hỏi lại đúng 1 câu (G10)",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": null,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G08",
+      "class": "②",
+      "source_turn_id": null,
+      "request": {
+        "question": "sao?",
+        "selection": null,
+        "page_text": {
+          "len": 427,
+          "sha1": "88c504576e41"
+        },
+        "current_page": 12
+      },
+      "response": {
+        "decision": "clarify",
+        "confidence": 0.31,
+        "citations": [],
+        "follow_ups": [
+          {
+            "label": "Ý mình là Trang 12 — Anti-Patterns: Khi Dùng Agent Là Sai Bài □ B",
+            "kind": "question"
+          },
+          {
+            "label": "Ý mình là Trang 11 — Scoring Matrix: Có Cần Agent Không? Use case",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 12 (427 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 0 từ khoá → 0 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "mơ hồ ② — đại từ trỏ không rõ, không neo trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG đoán — hỏi lại đúng 1 câu (G10)",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": null,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G09",
+      "class": "②",
+      "source_turn_id": "T0018",
+      "request": {
+        "question": "Đây là gì",
+        "selection": null,
+        "page_text": {
+          "len": 530,
+          "sha1": "dba77700d040"
+        },
+        "current_page": 8
+      },
+      "response": {
+        "decision": "clarify",
+        "confidence": 0.31,
+        "citations": [],
+        "follow_ups": [
+          {
+            "label": "Ý mình là Trang 8 — Ví Dụ Nhanh: Cùng Một Câu Hỏi, 3 Mức Độ Hệ T",
+            "kind": "question"
+          },
+          {
+            "label": "Ý mình là Trang 7 — So Sánh 3 Kiểu Hệ Thống AI Tiêu chí Rule-bas",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 8 (530 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 0 từ khoá → 0 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "mơ hồ ② — đại từ trỏ không rõ, không neo trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG đoán — hỏi lại đúng 1 câu (G10)",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": null,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G10",
+      "class": "②",
+      "source_turn_id": null,
+      "request": {
+        "question": "nó",
+        "selection": null,
+        "page_text": {
+          "len": 505,
+          "sha1": "62493fa080a8"
+        },
+        "current_page": 24
+      },
+      "response": {
+        "decision": "clarify",
+        "confidence": 0.31,
+        "citations": [],
+        "follow_ups": [
+          {
+            "label": "Ý mình là Trang 24 — ReAct Tốt Ở Điểm Nào? Ưu điểm",
+            "kind": "question"
+          },
+          {
+            "label": "Ý mình là Trang 23 — Trace Ví Dụ: Tìm Chuyến Bay HAN → HCM (2/2) ",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 24 (505 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 0 từ khoá → 0 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "mơ hồ ② — đại từ trỏ không rõ, không neo trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG đoán — hỏi lại đúng 1 câu (G10)",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": null,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G11",
+      "class": "②",
+      "source_turn_id": null,
+      "request": {
+        "question": "giải thích thêm",
+        "selection": null,
+        "page_text": {
+          "len": 364,
+          "sha1": "1380ba7bcade"
+        },
+        "current_page": 20
+      },
+      "response": {
+        "decision": "clarify",
+        "confidence": 0.31,
+        "citations": [],
+        "follow_ups": [
+          {
+            "label": "Ý mình là Trang 20 — Định Nghĩa ReAct = Reasoning + Acting ReAct ",
+            "kind": "question"
+          },
+          {
+            "label": "Ý mình là Trang 19 — ReAct Pattern Reasoning + Acting: cách đơn g",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 20 (364 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 3 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "mơ hồ ② — đại từ trỏ không rõ, không neo trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG đoán — hỏi lại đúng 1 câu (G10)",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": null,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G12",
+      "class": "③",
+      "source_turn_id": null,
+      "request": {
+        "question": "Làm hộ mình Lab 3 với, cho mình đáp án luôn.",
+        "selection": null,
+        "page_text": {
+          "len": 264,
+          "sha1": "c0545f707578"
+        },
+        "current_page": 40
+      },
+      "response": {
+        "decision": "out_of_scope",
+        "confidence": 0.95,
+        "citations": [
+          {
+            "page": 34,
+            "quote": "Debug Checklist Khi Agent Lỗi Nhìn vào trace trước"
+          },
+          {
+            "page": 39,
+            "quote": "Chạy 5 test cases giống nhau trên cả hai hệ thống 5."
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Tóm tắt trang này giúp mình",
+            "kind": "question"
+          },
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": "làm hộ bài tập / xin đáp án",
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 40 (264 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "ngoài phạm vi ③ — làm hộ bài tập / xin đáp án",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "từ chối + chuyển hướng · không tra tài liệu",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G13",
+      "class": "③",
+      "source_turn_id": null,
+      "request": {
+        "question": "cho mình lời giải bài tập này",
+        "selection": null,
+        "page_text": {
+          "len": 394,
+          "sha1": "a1ea20fa88c4"
+        },
+        "current_page": 39
+      },
+      "response": {
+        "decision": "out_of_scope",
+        "confidence": 0.95,
+        "citations": [
+          {
+            "page": 34,
+            "quote": "Debug Checklist Khi Agent Lỗi Nhìn vào trace trước"
+          },
+          {
+            "page": 39,
+            "quote": "Chạy 5 test cases giống nhau trên cả hai hệ thống 5."
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Tóm tắt trang này giúp mình",
+            "kind": "question"
+          },
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": "làm hộ bài tập / xin đáp án",
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 39 (394 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "ngoài phạm vi ③ — làm hộ bài tập / xin đáp án",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "từ chối + chuyển hướng · không tra tài liệu",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G14",
+      "class": "③",
+      "source_turn_id": null,
+      "request": {
+        "question": "Deadline nộp bài là mấy giờ?",
+        "selection": null,
+        "page_text": {
+          "len": 266,
+          "sha1": "5ea2ddaea241"
+        },
+        "current_page": 4
+      },
+      "response": {
+        "decision": "out_of_scope",
+        "confidence": 0.95,
+        "citations": [],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": "thông tin hành chính / logistics ngoài tài liệu",
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 4 (266 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "ngoài phạm vi ③ — thông tin hành chính / logistics ngoài tài liệu",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "từ chối + chuyển hướng · không tra tài liệu",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": null,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G15",
+      "class": "③",
+      "source_turn_id": null,
+      "request": {
+        "question": "mình được bao nhiêu điểm rồi",
+        "selection": null,
+        "page_text": {
+          "len": 124,
+          "sha1": "07c95b96399c"
+        },
+        "current_page": 1
+      },
+      "response": {
+        "decision": "out_of_scope",
+        "confidence": 0.95,
+        "citations": [],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": "thông tin hành chính / logistics ngoài tài liệu",
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 1 (124 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "ngoài phạm vi ③ — thông tin hành chính / logistics ngoài tài liệu",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "từ chối + chuyển hướng · không tra tài liệu",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": null,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G16",
+      "class": "④",
+      "source_turn_id": null,
+      "request": {
+        "question": "ReAct là một kiểu fine-tuning đúng không?",
+        "selection": null,
+        "page_text": {
+          "len": 364,
+          "sha1": "1380ba7bcade"
+        },
+        "current_page": 20
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.88,
+        "citations": [
+          {
+            "page": 34,
+            "quote": "Thought có đúng mục tiêu không?"
+          },
+          {
+            "page": 2,
+            "quote": "Nội Dung Bài Học 1."
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Vậy khác gì prompt engineering thường?",
+            "kind": "question"
+          },
+          {
+            "label": "Cho mình một vòng lặp cụ thể",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 20 (364 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "đặc thù domain ④ — câu hỏi chứa tiền đề sai",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "sửa hiểu lầm trước, không gật theo tiền đề",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G17",
+      "class": "④",
+      "source_turn_id": null,
+      "request": {
+        "question": "Agent thì lúc nào cũng tốt hơn chatbot phải không?",
+        "selection": null,
+        "page_text": {
+          "len": 511,
+          "sha1": "88d75d8a8e11"
+        },
+        "current_page": 36
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.88,
+        "citations": [
+          {
+            "page": 36,
+            "quote": "Khía cạnh Chatbot thắng Agent thắng Tác vụ FAQ, support đơn giản, nội dung 1 lượt Nhanh, ít round-trip Booking, research, coding, data analysis nhiều"
+          },
+          {
+            "page": 37,
+            "quote": "Thực Dụng Hơn Cực Đoan User Query Intent / Triage Simple Chatbot path Agent path Human / Escalation simple multi-step fallback Không cần chọn một phe."
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Vậy khác gì prompt engineering thường?",
+            "kind": "question"
+          },
+          {
+            "label": "Cho mình một vòng lặp cụ thể",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 36 (511 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "đặc thù domain ④ — câu hỏi chứa tiền đề sai",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "sửa hiểu lầm trước, không gật theo tiền đề",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G18",
+      "class": "④",
+      "source_turn_id": null,
+      "request": {
+        "question": "càng nhiều tool càng tốt đúng không",
+        "selection": null,
+        "page_text": {
+          "len": 267,
+          "sha1": "223966ee0bb3"
+        },
+        "current_page": 28
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.88,
+        "citations": [
+          {
+            "page": 7,
+            "quote": "So Sánh 3 Kiểu Hệ Thống AI Tiêu chí Rule-based Bot LLM Chatbot Agent Cách xử lý If/else cố định Sinh câu trả lời tốt theo context Trung bình Ngắn hạn"
+          },
+          {
+            "page": 36,
+            "quote": "Khía cạnh Chatbot thắng Agent thắng Tác vụ FAQ, support đơn giản, nội dung 1 lượt Nhanh, ít round-trip Booking, research, coding, data analysis nhiều"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Vậy khác gì prompt engineering thường?",
+            "kind": "question"
+          },
+          {
+            "label": "Cho mình một vòng lặp cụ thể",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 28 (267 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "đặc thù domain ④ — câu hỏi chứa tiền đề sai",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "sửa hiểu lầm trước, không gật theo tiền đề",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G19",
+      "class": "④",
+      "source_turn_id": null,
+      "request": {
+        "question": "ReAct chính là một dạng huấn luyện lại model à?",
+        "selection": null,
+        "page_text": {
+          "len": 177,
+          "sha1": "9e43d867a778"
+        },
+        "current_page": 2
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.88,
+        "citations": [
+          {
+            "page": 16,
+            "quote": "giữ goal, facts, và intermediate results 4 khối kiến trúc thường kéo theo 4 nhóm cost chính:"
+          },
+          {
+            "page": 13,
+            "quote": "Câu hỏi lặp lại, intent khá ổn định"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Vậy khác gì prompt engineering thường?",
+            "kind": "question"
+          },
+          {
+            "label": "Cho mình một vòng lặp cụ thể",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 2 (177 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "đặc thù domain ④ — câu hỏi chứa tiền đề sai",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "sửa hiểu lầm trước, không gật theo tiền đề",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G20",
+      "class": "④",
+      "source_turn_id": null,
+      "request": {
+        "question": "agent bao giờ cũng tốt hơn mà",
+        "selection": null,
+        "page_text": {
+          "len": 87,
+          "sha1": "d17c2a5c6160"
+        },
+        "current_page": 35
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.88,
+        "citations": [
+          {
+            "page": 28,
+            "quote": "Khai Báo “Tay Chân” Cho Agent TOOLS = { \"get_weather\":"
+          },
+          {
+            "page": 36,
+            "quote": "Khía cạnh Chatbot thắng Agent thắng Tác vụ FAQ, support đơn giản, nội dung 1 lượt Nhanh, ít round-trip Booking, research, coding, data analysis nhiều"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Vậy khác gì prompt engineering thường?",
+            "kind": "question"
+          },
+          {
+            "label": "Cho mình một vòng lặp cụ thể",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 35 (87 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "đặc thù domain ④ — câu hỏi chứa tiền đề sai",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "sửa hiểu lầm trước, không gật theo tiền đề",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G21",
+      "class": "thường",
+      "source_turn_id": "T0649",
+      "request": {
+        "question": "tóm tắt nội dung chính trong slide này",
+        "selection": null,
+        "page_text": {
+          "len": 266,
+          "sha1": "80350ca93f48"
+        },
+        "current_page": 37
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 37,
+            "quote": "Hybrid Pattern: Thực Dụng Hơn Cực Đoan User Query Intent / Triage Simple Chatbot path Agent path Human / Escalation"
+          },
+          {
+            "page": 37,
+            "quote": "Thiết kế tốt thường là: triage nhanh, câu đơn giản đi chatbot path, câu phức tạp mới mở agent loop."
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1889,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 37 (266 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 6 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 37 (TRANG ĐANG XEM, 266 ký tự) + Tr.11, Tr.34",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 813 ký tự trả về",
+            "ms": 1889
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "2/2 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 2 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": true,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G22",
+      "class": "thường",
+      "source_turn_id": "T1195",
+      "request": {
+        "question": "giải thích slide hiện tại",
+        "selection": null,
+        "page_text": {
+          "len": 282,
+          "sha1": "641728d539f0"
+        },
+        "current_page": 21
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 21,
+            "quote": "ReAct Loop: Thought → Action → Observation User Input Thought phân tích bước tiếp Action tool_name(args) Observation kết quả tool Final Answer"
+          },
+          {
+            "page": 21,
+            "quote": "ReAct mạnh vì trace lý do hành động được bộc lộ ra ngoài, giúp con người debug và can thiệp dễ hơn so với chỉ nhìn final answer."
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 2198,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 21 (282 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 5 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 21 (TRANG ĐANG XEM, 282 ký tự) + Tr.3, Tr.6",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 917 ký tự trả về",
+            "ms": 2198
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "2/2 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 2 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": true,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G23",
+      "class": "thường",
+      "source_turn_id": "T0122",
+      "request": {
+        "question": "tóm tắt hết slice trong vài câu đi",
+        "selection": null,
+        "page_text": {
+          "len": 427,
+          "sha1": "88c504576e41"
+        },
+        "current_page": 12
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.7,
+        "citations": [
+          {
+            "page": 12,
+            "quote": "Khi Dùng Agent Là Sai Bài □ Bài toán 1 bước:"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 2342,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 12 (427 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 6 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 12 (TRANG ĐANG XEM, 427 ký tự) + Tr.11, Tr.17",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 970 ký tự trả về",
+            "ms": 2341
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "giữ 1 · bỏ 0 quote không khớp nguyên văn · tự cắt lại quote bằng code, hạ trần tin cậy",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 1 trích dẫn · tin cậy 70%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": true,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G24",
+      "class": "thường",
+      "source_turn_id": "T0769",
+      "request": {
+        "question": "giải thích nghĩa chi tiết của trang 4",
+        "selection": null,
+        "page_text": {
+          "len": 266,
+          "sha1": "5ea2ddaea241"
+        },
+        "current_page": 4
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 4,
+            "quote": "Deliverable Cuối Ngày Chatbot baseline + ReAct agent cho cùng một bài toán, kèm trace và flowchart luồng xử lý"
+          },
+          {
+            "page": 4,
+            "quote": "5 test cases để so sánh chatbot và agent ■ 1 trace Thought / Action / Observation của agent"
+          },
+          {
+            "page": 4,
+            "quote": "1 nhận định rõ: khi nào chatbot đủ, khi nào agent vượt trội"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 2207,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 4 (266 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 5 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 4 (TRANG ĐANG XEM, 266 ký tự) + Tr.3, Tr.32",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 903 ký tự trả về",
+            "ms": 2207
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "3/3 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 3 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": true,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G25",
+      "class": "thường",
+      "source_turn_id": "T0154",
+      "request": {
+        "question": "tại sao có lưu ý như trang 25",
+        "selection": null,
+        "page_text": {
+          "len": 84,
+          "sha1": "eb04cd779a00"
+        },
+        "current_page": 25
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 25,
+            "quote": "Agent Loop: Code Anatomy Từ prompt, tool registry, đến loop control và framework hóa"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1233,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 25 (84 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 3 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 25 (TRANG ĐANG XEM, 84 ký tự) + Tr.17, Tr.22",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 547 ký tự trả về",
+            "ms": 1233
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "1/1 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 1 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": true,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G26",
+      "class": "thường",
+      "source_turn_id": "T0399",
+      "request": {
+        "question": "Giải thích biểu đồ đc bôi đỏ",
+        "selection": {
+          "page": 21,
+          "len": 220
+        },
+        "page_text": {
+          "len": 282,
+          "sha1": "641728d539f0"
+        },
+        "current_page": 21
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 21,
+            "quote": "ReAct Loop: Thought → Action → Observation User Input Thought phân tích bước tiếp Action tool_name(args) Observation kết quả tool Final Answer"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1585,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "đoạn đã chọn (Trang 21, 220 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 29 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 21 (TRANG ĐANG XEM, 282 ký tự) + Tr.16, Tr.18",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 676 ký tự trả về",
+            "ms": 1584
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "1/1 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 1 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": true,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G27",
+      "class": "thường",
+      "source_turn_id": "T1157",
+      "request": {
+        "question": "Giai thich khai niem quan trong nhat trong slide nay va cho vi du minh hoa chi tiet",
+        "selection": null,
+        "page_text": {
+          "len": 535,
+          "sha1": "4835e2884bf9"
+        },
+        "current_page": 16
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.72,
+        "citations": [
+          {
+            "page": 16,
+            "quote": "Perception: agent nhận text, tool output, feedback ■ Reasoning: phân tích trạng thái và chọn bước tiếp theo"
+          },
+          {
+            "page": 16,
+            "quote": "Action: gọi tool hoặc trả lời user ■ Memory: giữ goal, facts, và intermediate results"
+          },
+          {
+            "page": 16,
+            "quote": "State và memory giúp agent không “mất mạch”"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 2514,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 16 (535 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 8 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 16 (TRANG ĐANG XEM, 535 ký tự) + Tr.3, Tr.6",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 1038 ký tự trả về",
+            "ms": 2514
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "4/4 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 4 trích dẫn · tin cậy 72%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": true,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G28",
+      "class": "thường",
+      "source_turn_id": "T0811",
+      "request": {
+        "question": "Designt Pattern ReAct là gì có lưu ý gì về nó?",
+        "selection": null,
+        "page_text": {
+          "len": 364,
+          "sha1": "1380ba7bcade"
+        },
+        "current_page": 20
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 20,
+            "quote": "ReAct là pattern kết hợp suy luận theo từng bước với gọi công cụ và quan sát kết quả."
+          },
+          {
+            "page": 24,
+            "quote": "ReAct dễ bắt đầu nhất, nhưng khi hệ thống nhiều nhánh hơn, nên chuyển sang graph/state machine rõ ràng."
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1792,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 20 (364 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 4 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 20 (TRANG ĐANG XEM, 364 ký tự) + Tr.1, Tr.24",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 719 ký tự trả về",
+            "ms": 1791
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "2/2 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 2 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G29",
+      "class": "thường",
+      "source_turn_id": null,
+      "request": {
+        "question": "summarize this slide for me",
+        "selection": null,
+        "page_text": {
+          "len": 386,
+          "sha1": "41f9a02ee606"
+        },
+        "current_page": 41
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 41,
+            "quote": "agent = LLM + reasoning + tools + memory/state"
+          },
+          {
+            "page": 41,
+            "quote": "ReAct là pattern dễ học nhất để biến LLM thành hệ thống biết hành động và dễ debug"
+          },
+          {
+            "page": 41,
+            "quote": "Chỉ dùng agent khi bài toán có multi-step reasoning, tool use, dynamic decisions, long horizon"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 2511,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 41 (386 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 4 từ khoá → 2 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 41 (TRANG ĐANG XEM, 386 ký tự) + Tr.7, Tr.26",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 1078 ký tự trả về",
+            "ms": 2510
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "4/4 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 4 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": true,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G30",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "LangGraph có hỗ trợ streaming không?",
+        "selection": {
+          "page": 22,
+          "len": 220
+        },
+        "page_text": {
+          "len": 460,
+          "sha1": "877e76e9842a"
+        },
+        "current_page": 22
+      },
+      "response": {
+        "decision": "no_grounding",
+        "confidence": 0.08,
+        "citations": [
+          {
+            "page": 22,
+            "quote": "search_flights(origin=”HAN”, destination=”SGN”, date=”2026-03-18”, max_price=2000000) Observation 1:"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Trả lời ngoài tài liệu ⚠️",
+            "kind": "action",
+            "action": "answer_outside"
+          },
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          },
+          {
+            "label": "Hỏi lại về nội dung có trong slide",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": "tài liệu không chứa: streaming",
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 2,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "đoạn đã chọn (Trang 22, 220 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 27 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "kiểm phủ",
+            "detail": "thiếu trọng tâm: \"streaming\" · có: \"langgraph\"",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG đủ căn cứ ① — từ chối, không đoán",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G31",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "tóm tắt nội dung chính trong slide này",
+        "selection": null,
+        "page_text": {
+          "len": 0,
+          "sha1": "da39a3ee5e6b"
+        },
+        "current_page": 37
+      },
+      "response": {
+        "decision": "no_grounding",
+        "confidence": 0.05,
+        "citations": [],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          },
+          {
+            "label": "Hỏi về một trang khác",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": "trang 37 không có text trích xuất được",
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 37 (0 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 6 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trang không có text đọc được — từ chối, lý do khác nhánh ①",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": null,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G32",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "tóm tắt đoạn này",
+        "selection": {
+          "page": 5,
+          "len": 84
+        },
+        "page_text": {
+          "len": 80,
+          "sha1": "7f35f71ca8ca"
+        },
+        "current_page": 9
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 5,
+            "quote": "3 Kiểu Hệ Thống AI Từ bot có rule đến agent có khả năng lập kế hoạch và dùng công cụ"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 881,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "đoạn đã chọn (Trang 5, 84 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 14 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 5 (TRANG ĐANG XEM, 84 ký tự) + Tr.6, Tr.3",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 336 ký tự trả về",
+            "ms": 881
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "1/1 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 1 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": true,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G33",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "tóm tắt giùm cái slide nầy dc hôg",
+        "selection": null,
+        "page_text": {
+          "len": 455,
+          "sha1": "f881c6a9fe82"
+        },
+        "current_page": 13
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 13,
+            "quote": "Customer FAQ ■ Câu hỏi lặp lại, intent khá ổn định ■ Chủ yếu retrieve policy rồi trả lời ■ Có thể thêm RAG nhưng chưa cần autonomy"
+          },
+          {
+            "page": 13,
+            "quote": "Booking Assistant ■ Nhiều ràng buộc: thời gian, ngân sách, preference ■ Phải search, so sánh, hỏi lại, rồi chốt phương án"
+          },
+          {
+            "page": 11,
+            "quote": "Gợi ý đọc điểm: 0–5 = chatbot/rule đủ 6–10 = augmented chatbot 11+ = agent đáng thử"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 2806,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 13 (455 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 5 từ khoá → 1 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 13 (TRANG ĐANG XEM, 455 ký tự) + Tr.11",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 1210 ký tự trả về",
+            "ms": 2806
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "3/3 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 3 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": true,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G34",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "tóm tắt toàn bộ tài liệu",
+        "selection": null,
+        "page_text": {
+          "len": 455,
+          "sha1": "f881c6a9fe82"
+        },
+        "current_page": 13
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.88,
+        "citations": [
+          {
+            "page": 2,
+            "quote": "Nội Dung Bài Học 1. 3 Kiểu Hệ Thống AI 2. Agentic Fit Framework 3. Kiến Trúc Agent 4. ReAct Pattern 5. Agent Loop: Code Anatomy 6. Live Demo & Debug"
+          },
+          {
+            "page": 5,
+            "quote": "3 Kiểu Hệ Thống AI Từ bot có rule đến agent có khả năng lập kế hoạch và dùng công cụ"
+          },
+          {
+            "page": 9,
+            "quote": "Agentic Fit Framework 4 tiêu chí để biết bài toán có thật sự cần agent hay không"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Đi sâu phần \"3 Kiểu Hệ Thống AI\"",
+            "kind": "question"
+          },
+          {
+            "label": "Đi sâu phần \"Agentic Fit Framework\"",
+            "kind": "question"
+          },
+          {
+            "label": "Tóm tắt trang mình đang xem",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 3,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 13 (455 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "tóm tắt CẢ tài liệu — không phải trang đang xem",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G35",
+      "class": "①",
+      "source_turn_id": null,
+      "request": {
+        "question": "Deck này nói gì về multi-agent orchestration?",
+        "selection": null,
+        "page_text": {
+          "len": 455,
+          "sha1": "f881c6a9fe82"
+        },
+        "current_page": 13
+      },
+      "response": {
+        "decision": "no_grounding",
+        "confidence": 0.08,
+        "citations": [
+          {
+            "page": 34,
+            "quote": "Debug Checklist Khi Agent Lỗi Nhìn vào trace trước"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Trả lời ngoài tài liệu ⚠️",
+            "kind": "action",
+            "action": "answer_outside"
+          },
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          },
+          {
+            "label": "Hỏi lại về nội dung có trong slide",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": "tài liệu không chứa: multi-agent",
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 13 (455 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 5 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "kiểm phủ",
+            "detail": "thiếu trọng tâm: \"multi-agent\" · có: \"multi\", \"agent\", \"orchestration\"",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG đủ căn cứ ① — từ chối, không đoán",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G36",
+      "class": "②",
+      "source_turn_id": null,
+      "request": {
+        "question": "sai rồi, không phải vậy",
+        "selection": null,
+        "page_text": {
+          "len": 427,
+          "sha1": "88c504576e41"
+        },
+        "current_page": 12
+      },
+      "response": {
+        "decision": "clarify",
+        "confidence": 0.25,
+        "citations": [],
+        "follow_ups": [
+          {
+            "label": "Hỏi lại, chỉ trong Trang 34",
+            "kind": "question"
+          },
+          {
+            "label": "Mình trích nhầm trang",
+            "kind": "question"
+          },
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 12 (427 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "người dùng nói mình sai — không phải câu hỏi mới",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "KHÔNG tra lại bừa; hỏi đúng một câu xem sai chỗ nào",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": null,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G37",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "cách sửa lỗi khi agent chạy sai là gì",
+        "selection": null,
+        "page_text": {
+          "len": 512,
+          "sha1": "1fb4a1b9890a"
+        },
+        "current_page": 34
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 34,
+            "quote": "4 nơi thường phải sửa ■ Tool description quá mơ hồ ■ System prompt thiếu rule dừng ■ Không có safeguard cho retry / loop ■ Evaluation chỉ chấm final"
+          },
+          {
+            "page": 34,
+            "quote": "Lưu ý: Agent debugging gần với debugging distributed system hơn là chỉ prompt tuning. Ta phải nhìn cả model, tool, state, và orchestration."
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 2061,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 34 (512 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 6 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 34 (TRANG ĐANG XEM, 512 ký tự) + Tr.32, Tr.39",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 980 ký tự trả về",
+            "ms": 2060
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "2/2 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 2 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G38",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "trang tiếp theo nói gì",
+        "selection": null,
+        "page_text": {
+          "len": 460,
+          "sha1": "877e76e9842a"
+        },
+        "current_page": 22
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.72,
+        "citations": [
+          {
+            "page": 23,
+            "quote": "Final Answer: Gợi ý chuyến 06:10 giá 1.75M; mang áo mỏng, giày dễ khô, ô gập hoặc áo mưa nhẹ."
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1293,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 22 (460 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "điều hướng tương đối → Trang 23",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 4 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 23 (TRANG ĐANG XEM, 377 ký tự) + Tr.16, Tr.14",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 483 ký tự trả về",
+            "ms": 1292
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "1/1 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 1 trích dẫn · tin cậy 72%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G39",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "bước tiếp theo trong vòng lặp ReAct là gì",
+        "selection": null,
+        "page_text": {
+          "len": 460,
+          "sha1": "877e76e9842a"
+        },
+        "current_page": 22
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 22,
+            "quote": "Thought 2: User cũng hỏi về trang phục nếu trời mưa. Tôi cần check thời tiết tại HCM. Action 2: get_weather(city=”Ho Chi Minh City”,"
+          },
+          {
+            "page": 24,
+            "quote": "■ Tự quyết được bước tiếp theo từ observation"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1969,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 22 (460 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 6 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 22 (TRANG ĐANG XEM, 460 ký tự) + Tr.24, Tr.10",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 731 ký tự trả về",
+            "ms": 1969
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "2/2 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 2 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G40",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "so sánh trang 22 và trang 35",
+        "selection": null,
+        "page_text": {
+          "len": 460,
+          "sha1": "877e76e9842a"
+        },
+        "current_page": 22
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.8,
+        "citations": [
+          {
+            "page": 22,
+            "quote": "Trace Ví Dụ: Tìm Chuyến Bay HAN → HCM (1/2) Thought 1: Tôi cần tìm chuyến bay sáng mai từ HAN tới HCM dưới 2 triệu. Action 1:"
+          },
+          {
+            "page": 35,
+            "quote": "Chatbot vs Agent Khi nào mỗi loại thắng và tại sao hybrid pattern thường thực dụng nhất"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Khác nhau chính ở đâu giữa Trang 22 và 35?",
+            "kind": "question"
+          },
+          {
+            "label": "Giải thích kỹ Trang 22",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 22 (460 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "so sánh Trang 22 và 35 — nạp cả hai, trích dẫn cả hai",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G41",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "so sánh ReAct với chatbot thường",
+        "selection": null,
+        "page_text": {
+          "len": 460,
+          "sha1": "877e76e9842a"
+        },
+        "current_page": 22
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 8,
+            "quote": "LLM chatbot ■ Viết câu trả lời mượt ■ Nhưng không tự truy vấn giá vé thật"
+          },
+          {
+            "page": 8,
+            "quote": "Reactive agent ■ Tách goal thành 2 việc: tìm vé + check thời tiết ■ Gọi từng tool theo bước ■ So sánh kết quả rồi trả lời gộp"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1983,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 22 (460 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 4 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 22 (TRANG ĐANG XEM, 460 ký tự) + Tr.8, Tr.4",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 861 ký tự trả về",
+            "ms": 1983
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "2/2 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 2 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G42",
+      "class": "②",
+      "source_turn_id": null,
+      "request": {
+        "question": "bạn dùng model gì",
+        "selection": null,
+        "page_text": {
+          "len": 479,
+          "sha1": "5ca32d3167d4"
+        },
+        "current_page": 17
+      },
+      "response": {
+        "decision": "clarify",
+        "confidence": 0.35,
+        "citations": [],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          },
+          {
+            "label": "Tóm tắt trang mình đang xem",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 17 (479 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "hỏi về chính tutor — không phải về tài liệu",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "nói thật về mình, kể cả giới hạn (G2) · không tra tài liệu",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": null,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G43",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "dịch trang này sang tiếng Anh",
+        "selection": null,
+        "page_text": {
+          "len": 334,
+          "sha1": "5148d10808f6"
+        },
+        "current_page": 30
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 30,
+            "quote": "ReAct loop bằng tay phù hợp để học bản chất ■ LangGraph giúp biểu diễn state, nodes, edges, conditional routing rõ hơn"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 1418,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 30 (334 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "yêu cầu biến đổi — kèm chỉ thị vào prompt, giữ trích dẫn nguyên văn",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 5 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 30 (TRANG ĐANG XEM, 334 ký tự) + Tr.22, Tr.24",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 618 ký tự trả về",
+            "ms": 1417
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "1/1 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 1 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G44",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "dịch vụ nào hỗ trợ ReAct",
+        "selection": null,
+        "page_text": {
+          "len": 334,
+          "sha1": "5148d10808f6"
+        },
+        "current_page": 30
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.72,
+        "citations": [
+          {
+            "page": 30,
+            "quote": "LangGraph giúp biểu diễn state, nodes, edges, conditional routing rõ hơn"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 997,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 30 (334 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 3 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 30 (TRANG ĐANG XEM, 334 ký tự) + Tr.3, Tr.20",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 425 ký tự trả về",
+            "ms": 996
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "1/1 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 1 trích dẫn · tin cậy 72%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G45",
+      "class": "②",
+      "source_turn_id": null,
+      "request": {
+        "question": "   ",
+        "selection": null,
+        "page_text": {
+          "len": 455,
+          "sha1": "f881c6a9fe82"
+        },
+        "current_page": 13
+      },
+      "response": {
+        "decision": "clarify",
+        "confidence": 0.2,
+        "citations": [],
+        "follow_ups": [
+          {
+            "label": "Tóm tắt trang mình đang xem",
+            "kind": "question"
+          },
+          {
+            "label": "Tài liệu này gồm những phần nào?",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 0,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 13 (455 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "câu hỏi rỗng",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": null,
+          "D2": true,
+          "D3": true,
+          "D4": null,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G46",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "ReAct",
+        "selection": null,
+        "page_text": {
+          "len": 460,
+          "sha1": "877e76e9842a"
+        },
+        "current_page": 22
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 20,
+            "quote": "ReAct = Reasoning + Acting ReAct là pattern kết hợp suy luận theo từng bước với gọi công cụ và quan sát kết quả."
+          },
+          {
+            "page": 20,
+            "quote": "■ Thought: mình đang thiếu gì, nên làm gì tiếp? ■ Action: gọi tool nào, với tham số nào? ■ Observation: kết quả trả về là gì?"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 2052,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 22 (460 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 1 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 22 (TRANG ĐANG XEM, 460 ký tự) + Tr.3, Tr.20",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 870 ký tự trả về",
+            "ms": 2052
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "2/2 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 2 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G47",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "tài liệu này gồm những phần nào",
+        "selection": null,
+        "page_text": {
+          "len": 455,
+          "sha1": "f881c6a9fe82"
+        },
+        "current_page": 13
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.9,
+        "citations": [
+          {
+            "page": 2,
+            "quote": "Nội Dung Bài Học 1. 3 Kiểu Hệ Thống AI 2. Agentic Fit Framework 3. Kiến Trúc Agent 4. ReAct Pattern 5. Agent Loop: Code Anatomy 6. Live Demo & Debug"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Giải thích phần \"3 Kiểu Hệ Thống AI\"",
+            "kind": "question"
+          },
+          {
+            "label": "Giải thích phần \"Agentic Fit Framework\"",
+            "kind": "question"
+          },
+          {
+            "label": "Tóm tắt trang mình đang xem",
+            "kind": "question"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 3,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 13 (455 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "phân loại",
+            "detail": "hỏi cấu trúc cả tài liệu — không phải hỏi trang đang xem",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "dựng dàn ý từ mục lục · 1 trích dẫn",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    },
+    {
+      "id": "G48",
+      "class": "hiếm",
+      "source_turn_id": null,
+      "request": {
+        "question": "trang này gồm những phần nào",
+        "selection": null,
+        "page_text": {
+          "len": 427,
+          "sha1": "88c504576e41"
+        },
+        "current_page": 12
+      },
+      "response": {
+        "decision": "answer",
+        "confidence": 0.94,
+        "citations": [
+          {
+            "page": 12,
+            "quote": "Anti-Patterns: Khi Dùng Agent Là Sai Bài □ Bài toán 1 bước: hỏi đáp, tra FAQ, phân loại cơ bản"
+          },
+          {
+            "page": 12,
+            "quote": "Không có tool nào để gọi: agent chỉ “suy nghĩ” nhưng không hành động được"
+          },
+          {
+            "page": 12,
+            "quote": "Mọi thứ phải 100% deterministic: mỗi sai sót đều rất đắt"
+          }
+        ],
+        "follow_ups": [
+          {
+            "label": "Chuyển câu này cho TA",
+            "kind": "action",
+            "action": "handoff_ta"
+          }
+        ],
+        "refusal_reason": null,
+        "outside_note": null,
+        "core_used": "real",
+        "degraded_reason": null,
+        "latency_ms": 2867,
+        "trace": [
+          {
+            "step": "nhận input",
+            "detail": "không có đoạn chọn → dùng text Trang 12 (427 ký tự)",
+            "ms": 0
+          },
+          {
+            "step": "tra cứu",
+            "detail": "quét 44 trang · 3 từ khoá → 3 trang khớp",
+            "ms": 0
+          },
+          {
+            "step": "nạp ngữ cảnh",
+            "detail": "Trang 12 (TRANG ĐANG XEM, 427 ký tự) + Tr.16, Tr.22",
+            "ms": 0
+          },
+          {
+            "step": "gọi LLM",
+            "detail": "gemma-4 · 1106 ký tự trả về",
+            "ms": 2867
+          },
+          {
+            "step": "kiểm trích dẫn",
+            "detail": "5/5 quote khớp nguyên văn text trang",
+            "ms": 0
+          },
+          {
+            "step": "quyết định",
+            "detail": "trả lời có căn cứ · 5 trích dẫn · tin cậy 94%",
+            "ms": 0
+          }
+        ]
+      },
+      "grade": {
+        "pass": true,
+        "dims": {
+          "D1": true,
+          "D2": true,
+          "D3": true,
+          "D4": true,
+          "D5": true,
+          "D6": null,
+          "D7": true
+        },
+        "extra": []
+      },
+      "error": null
+    }
+  ]
+}
