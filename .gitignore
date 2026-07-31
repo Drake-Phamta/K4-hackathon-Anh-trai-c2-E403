@@ -26,3 +26,17 @@ session-log-*.json
 # ── Sinh ra lúc chạy, không phải mã nguồn ──
 __pycache__/
 .pytest_cache/
+
+# ── Next.js (web/) ──
+# Phải có TRƯỚC lần `npm install` đầu tiên: node_modules là ~300MB và
+# nguyên tắc §I của phan_cong_nhiem_vu.md là không bao giờ `git add -A`,
+# nhưng chặn sẵn vẫn rẻ hơn tin vào kỷ luật tay.
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+.vercel
+
+# ── FastAPI (api/) ──
+.venv/
+venv/

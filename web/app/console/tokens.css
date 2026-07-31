@@ -1,0 +1,58 @@
+/* ══════════════════════════════════════════════════════════════════════
+   CONSOLE — bảng điều khiển. Dày đặc, ưu tiên dữ liệu, phơi bày cơ chế.
+   Palette: slate lệch xanh (không phải grey trung tính vô cảm)
+   Type: system sans cho chữ, mono cho số/mã — mono là ngôn ngữ của bảng đo
+
+   Chép NGUYÊN VĂN từ codebase/prototype.html: giữ đúng tên token nên không
+   phải chỉnh lại màu, và injectViewerCSS() đọc được --pv-* vì chúng vẫn ở
+   :root (viewer CSS được chèn vào <head> lúc chạy, ngoài phạm vi CSS Module).
+   ══════════════════════════════════════════════════════════════════════ */
+:root{
+  color-scheme: light dark;
+  --bg:#eef1f6; --panel:#ffffff; --sunk:#f4f6fa; --line:#dde3ec;
+  --fg:#141922; --dim:#5b6577; --faint:#8b95a7;
+  --accent:#2563d8; --accent-soft:#e5edfd;
+  --ok:#0f7a52; --ok-soft:#e2f4ec;
+  --warn:#8a5a06; --warn-soft:#fdf0d8;
+  --bad:#b3312f; --bad-soft:#fdeae9;
+  --pv-paper:#fff; --pv-shadow:0 1px 3px rgba(20,25,34,.14),0 6px 22px rgba(20,25,34,.09);
+  --pv-num:#8b95a7; --pv-numbg:rgba(255,255,255,.9);
+  --pv-sel:rgba(37,99,216,.26); --pv-hit:rgba(217,152,32,.42); --pv-hit-strong:rgba(217,152,32,.8);
+  --pv-radius:3px;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"SF Mono",monospace;
+  --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1017; --panel:#151a23; --sunk:#10141c; --line:#242c3a;
+    --fg:#e3e8f0; --dim:#98a3b6; --faint:#69748a;
+    --accent:#5b95ff; --accent-soft:#182742;
+    --ok:#48c48c; --ok-soft:#0f2b20;
+    --warn:#e0a83a; --warn-soft:#33270e;
+    --bad:#f0736f; --bad-soft:#341a1b;
+    --pv-paper:#fff; --pv-shadow:0 2px 18px rgba(0,0,0,.55);
+    --pv-numbg:rgba(255,255,255,.85);
+    --pv-sel:rgba(91,149,255,.4);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#eef1f6; --panel:#fff; --sunk:#f4f6fa; --line:#dde3ec;
+  --fg:#141922; --dim:#5b6577; --faint:#8b95a7;
+  --accent:#2563d8; --accent-soft:#e5edfd;
+  --ok:#0f7a52; --ok-soft:#e2f4ec; --warn:#8a5a06; --warn-soft:#fdf0d8;
+  --bad:#b3312f; --bad-soft:#fdeae9;
+  --pv-shadow:0 1px 3px rgba(20,25,34,.14),0 6px 22px rgba(20,25,34,.09);
+  --pv-numbg:rgba(255,255,255,.9); --pv-sel:rgba(37,99,216,.26);
+}
+:root[data-theme="dark"]{
+  --bg:#0d1017; --panel:#151a23; --sunk:#10141c; --line:#242c3a;
+  --fg:#e3e8f0; --dim:#98a3b6; --faint:#69748a;
+  --accent:#5b95ff; --accent-soft:#182742;
+  --ok:#48c48c; --ok-soft:#0f2b20; --warn:#e0a83a; --warn-soft:#33270e;
+  --bad:#f0736f; --bad-soft:#341a1b;
+  --pv-shadow:0 2px 18px rgba(0,0,0,.55);
+  --pv-numbg:rgba(255,255,255,.85); --pv-sel:rgba(91,149,255,.4);
+}
+
+body{ font-family:var(--sans); background:var(--bg); color:var(--fg); }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:4px; }

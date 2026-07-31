@@ -1,0 +1,30 @@
+/* Reset dùng chung cho cả 3 bản.
+   KHÔNG đặt token màu ở đây: ba bản định nghĩa CÙNG TÊN token (--bg, --accent…)
+   với giá trị khác nhau, nên token nằm ở tokens.css của từng route và nạp qua
+   layout lồng của route đó. */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  font-size: 14px;
+  line-height: 1.55;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+/* Trang chọn bản cần cuộn được; các route ứng dụng thì khoá cuộn body */
+body:has([data-scrollable]) { overflow: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

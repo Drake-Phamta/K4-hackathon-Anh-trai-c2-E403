@@ -1,0 +1,64 @@
+/* Trang chọn bản — trung tính, không mang bản sắc của bản nào trong 3 bản.
+   Token riêng, không dùng chung với các route (mỗi route tự nạp tokens.css). */
+.picker {
+  --pk-bg: #f6f7f9; --pk-card: #fff; --pk-line: #e3e7ee;
+  --pk-fg: #161a21; --pk-dim: #5c6675; --pk-faint: #98a1b0;
+  --pk-accent: #2563d8;
+  min-height: 100vh; padding: clamp(28px, 7vh, 72px) 22px 40px;
+  background: var(--pk-bg); color: var(--pk-fg);
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  .picker {
+    --pk-bg: #0d1017; --pk-card: #151a23; --pk-line: #242c3a;
+    --pk-fg: #e3e8f0; --pk-dim: #98a3b6; --pk-faint: #69748a;
+    --pk-accent: #5b95ff;
+  }
+}
+
+.head { max-width: 62ch; margin: 0 auto 34px; text-align: center; }
+.head h1 { font-size: clamp(24px, 3.4vw, 34px); font-weight: 650; letter-spacing: -.02em; text-wrap: balance; }
+.head p { margin-top: 10px; color: var(--pk-dim); font-size: 15px; line-height: 1.7; }
+.head b { color: var(--pk-fg); font-weight: 600; }
+
+.grid {
+  max-width: 1080px; margin: 0 auto;
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+}
+
+.card {
+  display: flex; flex-direction: column; gap: 9px;
+  background: var(--pk-card); border: 1px solid var(--pk-line);
+  border-radius: 14px; padding: 18px 18px 16px;
+  transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+.card p { color: var(--pk-dim); font-size: 13.5px; line-height: 1.65; flex: 1; }
+
+a.card:hover {
+  border-color: var(--pk-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px -12px rgba(0, 0, 0, .3);
+}
+
+.cardHd { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+.name { font-size: 17px; font-weight: 640; letter-spacing: -.01em; }
+.tag {
+  font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--pk-faint); border: 1px solid var(--pk-line);
+  padding: 2px 7px; border-radius: 20px;
+}
+.go { font-size: 12.5px; color: var(--pk-accent); font-weight: 550; }
+
+.soon { opacity: .62; }
+.soon .go { color: var(--pk-faint); font-weight: 400; font-style: italic; }
+
+.foot {
+  max-width: 62ch; margin: 34px auto 0; text-align: center;
+  color: var(--pk-faint); font-size: 12.5px; line-height: 1.7;
+}
+.foot code {
+  font-family: "Cascadia Mono", ui-monospace, Consolas, monospace;
+  font-size: 11.5px; background: var(--pk-card);
+  border: 1px solid var(--pk-line); padding: 1px 5px; border-radius: 5px;
+}
