@@ -18,48 +18,69 @@ async function loadPdf(page: Page, route = '/console') {
   await expect(page.locator('.pv-page')).toHaveCount(44);
 }
 
-test('Console lifecycle, virtualization and five decisions', async ({ page }) => {
+test('Console lifecycle, PDF virtualization and page jump', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
   await loadPdf(page);
+  await expect(page.getByTestId('viewer-root')).toHaveCount(1);
   expect(await page.locator('.pv-canvas').count()).toBeLessThanOrEqual(8);
-
-  const cases = [
-    ['happy', 'answer'],
-    ['clarify', 'clarify'],
-    ['nog', 'no_grounding'],
-    ['oos', 'out_of_scope'],
-    ['domain', 'answer'],
-  ] as const;
-  for (const [scenario, decision] of cases) {
-    const before = await page.getByTestId('decision').count();
-    await page.locator(`[data-s="${scenario}"]`).click();
-    await expect(page.getByTestId('decision')).toHaveCount(before + 1);
-    await expect(page.getByTestId('decision').last()).toHaveAttribute('data-decision', decision);
-  }
-  await expect(page.locator('input.pgIn, input[class*="pgIn"]')).toHaveValue('20');
+  await page.getByTestId('page-input').fill('37');
+  await expect(page.getByTestId('page-input')).toHaveValue('37');
+  await expect(page.locator('.pv-page[data-page="37"]')).toBeInViewport();
   expect(errors).toEqual([]);
 });
 
-test('Console citation, recovery action, feedback and theme', async ({ page, context }) => {
+test('Console keeps all five decision branches and invariants', async ({ page }) => {
+  await loadPdf(page);
+  const cases = [
+    ['happy', 'answer', true],
+    ['clarify', 'clarify', false],
+    ['nog', 'no_grounding', true],
+    ['oos', 'out_of_scope', true],
+    ['domain', 'answer', true],
+  ] as const;
+  for (const [scenario, decision, cited] of cases) {
+    const before = await page.getByTestId('decision').count();
+    await page.locator(`[data-s="${scenario}"]`).click();
+    await expect(page.getByTestId('decision')).toHaveCount(before + 1);
+    const answer = page.getByTestId('decision').last().locator('xpath=ancestor::*[contains(@class,"msg")]');
+    await expect(answer.getByTestId('decision')).toHaveAttribute('data-decision', decision);
+    if (cited) await expect(answer.getByTestId('citation').first()).toBeVisible();
+    else await expect(answer.getByTestId('citation')).toHaveCount(0);
+  }
+});
+
+test('Console supports outside-document and TA handoff actions', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await loadPdf(page);
-  await page.locator('[data-s="happy"]').click();
-  await expect(page.getByTestId('decision')).toHaveAttribute('data-decision', 'answer');
-  await page.getByTestId('citation').first().click();
-  await expect(page.locator('.pv-hit').first()).toBeVisible();
-
   await page.locator('[data-s="nog"]').click();
   const outside = page.getByTestId('action-answer_outside').last();
   await expect(outside).toBeVisible();
   await outside.click();
   await expect(page.getByTestId('decision').last()).toHaveAttribute('data-decision', 'outside_document');
   await expect(page.getByTestId('decision').last().locator('xpath=ancestor::*[contains(@class,"msg")]').getByTestId('citation')).toHaveCount(0);
+  await page.getByTestId('action-handoff_ta').last().click();
+  await expect(page.getByText(/Đã copy tin nhắn cho TA/)).toBeVisible();
+});
 
+test('Console citation, theme, feedback, copy, log and offline voice', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await loadPdf(page);
+  await expect(page.getByTestId('microphone')).toBeDisabled();
+  await page.locator('[data-s="happy"]').click();
+  await expect(page.getByTestId('decision')).toHaveAttribute('data-decision', 'answer');
+  await page.getByTestId('citation').first().click();
+  await expect(page.locator('.pv-hit').first()).toBeVisible();
   const before = await page.locator('html').getAttribute('data-theme');
   await page.getByRole('button', { name: '◐' }).click();
   expect(await page.locator('html').getAttribute('data-theme')).not.toBe(before);
+  await page.getByTitle('Hữu ích').click();
+  await page.getByTitle('Chép câu trả lời kèm số trang trích dẫn').click();
+  await expect(page.getByText(/Đã chép câu trả lời kèm nguồn/)).toBeVisible();
+  await expect(page.getByRole('button', { name: '🔊 Đọc', exact: true })).toBeDisabled();
+  await page.getByTestId('download-log').click();
+  await expect(page.getByText(/Đã xuất 1 lượt/)).toBeVisible();
 });
 
 test('Legacy and Next Console keep happy-path parity', async ({ page }) => {

@@ -38,8 +38,9 @@
 - **Giai đoạn C** — `/doc` và `/wild` dùng hooks hiện tại, đủ decision/action/degraded state.
 - **Giai đoạn D** — GSAP motion primitives + callback `onPageRendered`; reduced-motion tắt chuyển động.
 - **Giai đoạn E** — breakpoint 880px; Console/Đọc thành bottom sheet, Bàn Slide thành danh sách ghim dọc.
-- **E2E Playwright** — 6 flow: lifecycle + 5 decision, recovery/citation/theme, legacy parity,
-  Đọc, Bàn Slide, compact/reduced-motion.
+- **E2E Playwright** — 8 flow: lifecycle/virtualization/Trang 37, 5 decision,
+  `outside_document` + `handoff_ta`, citation/theme/feedback/copy/log/voice-disabled,
+  legacy parity, Đọc, Bàn Slide, compact/reduced-motion.
 
 ### Chưa làm
 - Manual smoke mic STT/TTS trên máy demo.

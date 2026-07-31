@@ -221,7 +221,7 @@ export default function ConsolePage() {
         <div className={s.pg}>
           <button className={`${s.btn} ${s.sm}`} disabled={!viewer.total} onClick={() => viewer.goTo(viewer.page - 1)}>◀</button>
           <input
-            className={s.pgIn} disabled={!viewer.total}
+            className={s.pgIn} data-testid="page-input" disabled={!viewer.total}
             value={viewer.total ? viewer.page : '–'}
             onChange={e => viewer.goTo(parseInt(e.target.value) || 1)}
           />
@@ -236,7 +236,7 @@ export default function ConsolePage() {
           const { initTheme } = await import('@/lib/ui.mjs');
           initTheme().toggle();
         }}>◐</button>
-        <button className={`${s.btn} ${s.sm}`} onClick={async () => {
+        <button className={`${s.btn} ${s.sm}`} data-testid="download-log" onClick={async () => {
           const log = tutor.getLog();
           if (!log.length) return toast('Chưa có lượt hỏi nào');
           const { downloadLog } = await import('@/lib/ui.mjs');
@@ -324,6 +324,7 @@ export default function ConsolePage() {
               />
               <button
                 className={`${s.btn} ${micState === 'recording' ? s.rec : ''}`}
+                data-testid="microphone"
                 disabled={micDisabled} title={micTitle} onClick={onMic}
               >
                 {micState === 'recording' ? `⏹ ${voice.seconds}s` : micState === 'processing' ? '…' : '🎙'}
