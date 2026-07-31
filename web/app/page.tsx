@@ -13,12 +13,12 @@ const VARIANTS = [
   {
     href: '/doc', name: 'Đọc', tag: 'clean',
     desc: 'Phòng đọc yên tĩnh. Cùng dữ liệu, khác thái độ: cơ chế gói sau “cách mình làm”, đóng mặc định. Hợp demo cho học viên.',
-    ready: false,
+    ready: true,
   },
   {
     href: '/wild', name: 'Bàn Slide', tag: 'wildcard',
     desc: 'Bỏ hẳn cột chat. Câu trả lời là một ghim treo cạnh đúng đoạn nó trích dẫn, nối bằng sợi chỉ vẽ tay.',
-    ready: false,
+    ready: true,
   },
 ];
 

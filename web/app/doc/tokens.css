@@ -1,0 +1,17 @@
+:root {
+  --bg:#f2eee5; --panel:#fffdf8; --sunk:#f6f1e8; --line:#dcd4c5;
+  --fg:#25231f; --dim:#6d675d; --faint:#999185; --accent:#9a4f34;
+  --accent-soft:#f0ddd3; --on-accent:#fffaf5; --ok:#37745b; --ok-soft:#dfeee6;
+  --warn:#94651f; --warn-soft:#f3e7ce; --bad:#a64540; --bad-soft:#f1deda;
+  --pv-paper:#fff; --pv-shadow:0 .9rem 2.5rem rgba(75,62,42,.15); --pv-num:#8a8173;
+  --pv-numbg:rgba(255,253,248,.9); --pv-sel:rgba(154,79,52,.25); --pv-hit:rgba(215,174,92,.4);
+  --pv-hit-strong:rgba(215,174,92,.75); --pv-radius:10px;
+  --mono:ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --sans:"Be Vietnam Pro","Avenir Next","Segoe UI",system-ui,sans-serif;
+}
+:root[data-theme="dark"] {
+  --bg:#171613; --panel:#211f1a; --sunk:#29261f; --line:#3c382e; --fg:#eee8dc;
+  --dim:#b3aa9b; --faint:#81796c; --accent:#d88965; --accent-soft:#3b251d;
+  --on-accent:#1b110d; --pv-shadow:0 1rem 3rem rgba(0,0,0,.48);
+}
+body { font-family:var(--sans); background:var(--bg); color:var(--fg); }

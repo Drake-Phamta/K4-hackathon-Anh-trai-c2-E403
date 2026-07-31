@@ -1,0 +1,16 @@
+:root {
+  color-scheme:dark; --bg:#101519; --panel:#192126; --sunk:#111a1f; --line:#304049;
+  --fg:#e8eee9; --dim:#9baba6; --faint:#667872; --accent:#d1a954; --accent-soft:#332d1c;
+  --on-accent:#17140c; --ok:#55b9ad; --ok-soft:#143532; --warn:#d1a954; --warn-soft:#332d1c;
+  --bad:#dc786d; --bad-soft:#3c201f; --pin-shadow:rgba(209,169,84,.13);
+  --pv-paper:#f7f4eb; --pv-shadow:0 1rem 3rem rgba(0,0,0,.55); --pv-num:#667872;
+  --pv-numbg:rgba(16,21,25,.84); --pv-sel:rgba(85,185,173,.34); --pv-hit:rgba(209,169,84,.4);
+  --pv-hit-strong:rgba(209,169,84,.82); --pv-radius:2px;
+  --mono:"SFMono-Regular",Consolas,monospace; --sans:"Avenir Next","Segoe UI",system-ui,sans-serif;
+}
+:root[data-theme="light"] {
+  color-scheme:light; --bg:#e7e5dd; --panel:#f5f2e9; --sunk:#dddcd4; --line:#bebcb2;
+  --fg:#1d2426; --dim:#576365; --faint:#7d8887; --accent:#80621f; --accent-soft:#e7dcc0;
+  --on-accent:#fff; --pv-shadow:0 1rem 2.6rem rgba(30,37,38,.2);
+}
+body { font-family:var(--sans); background:var(--bg); color:var(--fg); }
