@@ -21,6 +21,9 @@ export function createViewer({ container, onPage, onSelection, onReady, gap = 18
   let slots = [];                   // phần tử .pv-page theo thứ tự trang
   const rendered = new Map();       // page -> {task}
   let io = null, raf = 0;
+  /* Trang đích của goTo() đang cuộn mượt tới. Khác null = đừng tin trang mà
+     IntersectionObserver báo, vì đó là trang đang bay qua giữa đường. */
+  let pendingGoTo = null, pendingTimer = 0;
 
   container.classList.add('pv-root');
 
@@ -157,14 +160,40 @@ export function createViewer({ container, onPage, onSelection, onReady, gap = 18
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(() => {
       const host = container.closest('.pv-scroll') ?? container;
-      const mid = host.getBoundingClientRect().top + host.clientHeight * 0.35;
-      let best = current, bestD = Infinity;
+      const hr = host.getBoundingClientRect();
+      /* Vạch đọc gần đỉnh khung, không phải giữa khung.
+         Vì sao 15% chứ không phải 35%: slide 16:9 ở chế độ vừa-chiều-ngang
+         THẤP hơn viewport, nên khi goTo() căn đỉnh trang vào đỉnh khung thì
+         vạch 35% đã rơi sang TRANG SAU. Hệ quả: nhảy tới trang 37 rồi hỏi
+         "tóm tắt trang này" thì tutor tóm tắt trang 38. Vạch 15% nằm trong
+         lòng trang vừa cuộn tới, khớp với cả goTo lẫn cảm nhận của người đọc
+         (trang đang ở đầu khung nhìn mới là trang đang đọc). */
+      const readLine = hr.top + host.clientHeight * 0.15;
+
+      let best = current, bestD = Infinity, spanning = null;
       for (const s of slots){
         const r = s.getBoundingClientRect();
         if (r.bottom < 0 || r.top > window.innerHeight * 2) continue;
-        const d = Math.abs(r.top - mid);
+        /* Trang nào ĐANG CẮT vạch đọc thì thắng ngay — trang đầu tiên như vậy
+           là trang trên cùng đang hiển thị thực sự. */
+        if (spanning == null && r.top <= readLine && r.bottom > readLine)
+          spanning = +s.dataset.page;
+        const d = Math.abs(r.top - readLine);
         if (d < bestD){ bestD = d; best = +s.dataset.page; }
       }
+      if (spanning != null) best = spanning;
+
+      /* Đang cuộn MƯỢT tới một trang do goTo() đặt: bỏ qua mọi trang bay qua
+         giữa đường. Trước đây current bị ghi đè bởi trang trung gian, nên gõ
+         "tóm tắt trang này" ngay sau khi nhảy trang thì tutor tóm tắt SAI
+         TRANG. Lỗi này vô hại khi current_page chỉ để hiện số trang, nhưng từ
+         khi page_text thành nguồn sự thật thì nó thành lỗi trả lời sai. */
+      if (pendingGoTo != null){
+        if (best !== pendingGoTo) return;          // chưa tới đích, chưa tin
+        pendingGoTo = null;                        // đã tới, mở chốt
+        clearTimeout(pendingTimer);
+      }
+
       if (best !== current){ current = best; onPage?.(current); }
     });
   }
@@ -181,8 +210,32 @@ export function createViewer({ container, onPage, onSelection, onReady, gap = 18
     const slot = slots[p - 1];
     if (!slot) return;
     renderPage(p);
+
+    /* Chốt trang đích trong lúc cuộn mượt — xem giải thích ở onScroll().
+       Có timeout đề phòng cuộn không bao giờ tới đúng đích (trang cuối cùng
+       không thể nằm ở vạch 35% màn hình), tránh chốt bị kẹt vĩnh viễn. */
+    clearTimeout(pendingTimer);
+    if (smooth){
+      pendingGoTo = p;
+      pendingTimer = setTimeout(() => { pendingGoTo = null; }, 1800);
+    } else {
+      pendingGoTo = null;
+    }
+
     slot.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
     current = p; onPage?.(p);
+  }
+
+  /** Chờ cuộn tới đúng trang đích rồi mới trả về — dùng khi phải chắc
+      current_page đã đúng trước lúc dựng AskRequest (kịch bản demo). */
+  function settled(ms = 1500){
+    if (pendingGoTo == null) return Promise.resolve(current);
+    return new Promise(ok => {
+      const t0 = Date.now();
+      const tick = () => (pendingGoTo == null || Date.now() - t0 > ms)
+        ? ok(current) : setTimeout(tick, 60);
+      tick();
+    });
   }
 
   async function fitWidth(){
@@ -263,7 +316,7 @@ export function createViewer({ container, onPage, onSelection, onReady, gap = 18
   }
 
   return {
-    load, goTo, highlight, setZoom, fitWidth, anchorOf,
+    load, goTo, settled, highlight, setZoom, fitWidth, anchorOf,
     get total(){ return total; },
     get page(){ return current; },
     get pages(){ return pages; },

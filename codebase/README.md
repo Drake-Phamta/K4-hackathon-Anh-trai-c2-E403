@@ -3,10 +3,10 @@
 Xem slide bài giảng · cuộn liên tục · bôi đen một đoạn (hoặc **nói**) · nhận câu trả lời
 **có trích dẫn trang bấm được**.
 
-**Vẫn giai đoạn 1:** nhân AI **mock hoàn toàn** — không có lời gọi LLM nào. Ghi chú cá
-nhân hoá là GĐ2. Bản này bổ sung: cuộn liên tục (không còn lật từng trang), **trò chuyện
-bằng giọng nói thời gian thực**, chế độ sáng/tối, và **3 phong cách giao diện** dựng trên
-cùng một nhân — để chọn hướng trước khi khoá UI cuối cùng.
+**Giai đoạn 2 — AI chạy thật.** Quyết định trung tâm gọi **gemma-4** qua proxy
+`server.mjs`; lớp tra cứu, phép phủ định và kiểm trích dẫn nguyên văn chạy bằng code.
+Ghi chú cá nhân hoá vẫn chưa có. Bản này có: cuộn liên tục, đường lui khi AI bí (nhánh thứ 5 *ngoài tài liệu* + chuyển TA), chế độ sáng/tối,
+trên một bản giao diện Console.
 
 ---
 
@@ -14,99 +14,40 @@ cùng một nhân — để chọn hướng trước khi khoá UI cuối cùng.
 
 ```bash
 cd codebase
-python -m http.server 8080
+node server.mjs
 ```
 
-> Cổng **8080**, không phải 8000 — `ptalk_engine/` (STT/TTS của nhóm) chạy uvicorn ở
-> cổng 8000. Hai server khác việc, không được đụng cổng nhau.
+`server.mjs` phục vụ file tĩnh **và** proxy LLM trên cùng cổng **8080**. Phải dùng nó
+thay `python -m http.server`, vì API key nằm trong `.env` ở gốc repo và **không được
+xuống client** (CONTRACT §4 mục 3) — proxy giữ key lại ở server.
+
+```bash
+curl -s localhost:8080/api/llm/health     # → {"ok":true,"model":"gemma-4"}
+```
+
+Không có `.env` hoặc LLM chết thì mọi thứ **vẫn chạy**, tự rơi về nhân mock — và nhãn
+trên thanh trên đổi thành `nhân mock` để không ai tưởng đang xem AI thật.
 
 Mở một trong ba:
 
 | URL | Phong cách |
 |---|---|
 | `localhost:8080/prototype.html` | **Console** — bảng điều khiển, phơi bày cơ chế |
-| `localhost:8080/prototype-minimal.html` | **Đọc** — phòng đọc yên tĩnh, cơ chế ẩn sau `▸` |
-| `localhost:8080/prototype-wild.html` | **Bàn Slide** — hội thoại ghim thẳng lên slide |
 
-Không cài gì, không build step. `pdf.js` đã có sẵn trong `vendor/` nên demo không cần mạng.
-Slide **không nằm trong repo** (quy định bảo mật data pack) — nạp lúc chạy bằng *Mở PDF*
-hoặc kéo-thả, hoặc `?file=<url>` cho PDF cùng origin.
+Không `npm install`, không build step — `server.mjs` chỉ dùng thư viện chuẩn của Node.
+`pdf.js` có sẵn trong `vendor/` nên UI không cần mạng (chỉ lời gọi LLM cần).
 
----
-
-## Ba phong cách, một nhân
+Nạp slide bằng *Mở PDF*, kéo-thả, hoặc `?file=/data/slides/day03.pdf` (server phục vụ
+`data/` cùng origin nên link này chạy được):
 
 ```
-             ┌── prototype.html ─────────┐
-core.mjs ────┼── prototype-minimal.html ─┼──── viewer.mjs (PDF, cuộn, bôi đen)
-(AI seam)    └── prototype-wild.html ────┘──── voice.mjs  (giọng nói, ngắt lời)
-                                          └──── ui.mjs     (request/response/theme)
+localhost:8080/prototype.html?file=/data/slides/day03.pdf
 ```
 
-Ba file HTML **không tự dựng lại PDF hay giọng nói** — dựng 3 lần là 3 bộ bug. Mỗi bản
-chỉ khác CSS + bố cục + cách trình bày câu trả lời. Sửa một bug trong `viewer.mjs` là
-sửa cho cả ba.
-
-| File | Vai trò |
-|---|---|
-| `core.mjs` | **SEAM.** Contract + retrieval + mock. GĐ2 chỉ sửa file này. |
-| `viewer.mjs` | pdf.js cuộn liên tục + ảo hoá (chỉ render trang gần khung nhìn) + bôi đen + highlight. |
-| `voice.mjs` | Giọng nói thời gian thực — xem mục riêng bên dưới. |
-| `ui.mjs` | Tiện ích dùng chung: dựng `AskRequest`, markdown tối giản, theme, xuất log. |
-| `prototype*.html` | UI thuần — không chứa logic AI, chỉ gọi `askTutor()`. |
-| `CONTRACT.md` | Hợp đồng `AskRequest`/`AskResponse` — đã chốt. |
-| `test-core.mjs` | Kiểm thử `core.mjs` không cần trình duyệt. |
-| `dump-pages.py` | PDF → `pages.json` để chạy test. |
-
-Chia việc GĐ2 theo đúng ranh giới file: người làm AI sửa `core.mjs`, người làm UI sửa
-phần trình bày trong `prototype*.html`. Không giẫm chân nhau.
-
----
-
-## Ba phong cách — vì sao khác nhau
-
-**Console** (`prototype.html`) — bảng điều khiển kỹ thuật. Trace mở sẵn, badge đậm, mono
-cho số. Đúng gu người build muốn nhìn thấy cơ chế đang chạy, dùng để debug prompt và demo
-cho giám khảo kỹ thuật.
-
-**Đọc** (`prototype-minimal.html`) — phòng đọc. Cùng dữ liệu, khác thái độ: trace gói
-trong `▸ cách mình làm` — đóng mặc định, mở khi bị hỏi. Bo tròn nhiều, khoảng trắng rộng,
-palette giấy + xanh thông (không phải cream/terracotta mặc định). Hợp demo cho học viên —
-không doạ người mới bằng thuật ngữ workflow.
-
-**Bàn Slide** (`prototype-wild.html`) — thử nghiệm phá bố cục. Bỏ hẳn cột chat: câu trả
-lời là một **ghim** treo cạnh đúng đoạn nó trích dẫn, nối bằng sợi chỉ vẽ tay. Dải phim
-thumbnail bên trái thay cho page number, chấm đồng đánh dấu trang đã hỏi. Palette mực +
-đồng thau (dụng cụ) + lơ (bằng chứng) + san hô (dừng) — một thế giới thị giác duy nhất,
-cam kết tối, có "đèn bàn" thay vì light mode giấy trắng vì nền trắng phá vỡ ngôn ngữ
-ghim + chỉ dẫn. Rủi ro: nhiều ghim cùng lúc thì bàn rối — có nút *Dọn bàn*.
-
-Không bản nào là "bản chính". Ba bản là ba giả thuyết thiết kế để test với người dùng
-thật ở CP5 — giữ bản nào phụ thuộc feedback, không phải gu của người build.
-
----
-
-## Trò chuyện bằng giọng nói (mới)
-
-Hai cỗ máy, tự dò, giao diện luôn nói rõ đang chạy cái nào (G2):
-
-| Cỗ máy | Khi nào dùng | Chất lượng |
-|---|---|---|
-| **Web Speech API** (mặc định) | Luôn sẵn trên Chrome/Edge, không cần cài | Khá cho tiếng Việt phổ thông, có kết quả tạm thời (chữ hiện ngay khi đang nói) |
-| **PTalk** (`ptalk_engine/` — Drake-Phamta) | Tự bật nếu server đang chạy ở `:8000` | ZipFormer/Whisper + OmniVoice tiếng Việt, có voice cloning — tốt hơn cho thuật ngữ AI |
-
-Chạy PTalk (tuỳ chọn):
-```bash
-cd ptalk_engine
-python setup_folders.py
-# copy model ZipFormer + ref.wav theo hướng dẫn setup_folders.py in ra
-uvicorn app_api:app --port 8000          # terminal 1
-python tts_server.py                     # terminal 2
-```
-Không chạy PTalk thì cả 3 bản **vẫn hoạt động đầy đủ** — tự rơi về Web Speech.
-
-**Ngắt lời (barge-in):** user mở miệng nói là tutor im ngay, không phải đợi nó nói hết.
-Không có cái này thì hội thoại giọng nói rất khó chịu — phải chờ nhau như bộ đàm.
+> **Về deck trong repo:** `data/slides/day03.pdf` **có** được commit — nhóm chủ động giữ
+> để mọi thành viên và TA chạy lại được cùng một bộ đo. Còn `pages.json` (text đã trích)
+> thì **không** commit, `.gitignore` chặn. Data pack gốc trong `data/vlearn-pack/` do BTC
+> cấp sẵn trong repo khởi tạo.
 
 ---
 
@@ -128,12 +69,16 @@ thời điểm.
 | Trích text mọi trang | **THẬT** — `getTextContent()` |
 | Tra cứu, xếp hạng trang, chọn câu trích dẫn | **THẬT** — `retrieve()` trong `core.mjs` |
 | Phát hiện thiếu căn cứ (nhánh ①), kể cả cụm ghép (`multi-agent` ≠ `multi-step`) | **THẬT** |
-| Nhận diện giọng nói / đọc câu trả lời | **THẬT** — Web Speech hoặc PTalk, không mock |
-| **Văn phong câu trả lời** | **MOCK** — template dựng từ chữ trong trang, không có LLM |
-| Pane Ghi chú cá nhân hoá | **CHƯA CÓ** — GĐ2 |
+| **Nạp toàn bộ text trang đang xem vào ngữ cảnh** | **THẬT** — đây là lát cắt, `core.mjs` route neo trang |
+| **Sinh câu trả lời** | **THẬT** — gemma-4 qua `server.mjs`, key ở server |
+| **Kiểm mọi trích dẫn có cắt nguyên văn từ đúng trang** | **THẬT** — `verifyCitations()`, quote không khớp thì **bỏ** |
+| Trả lời ngoài tài liệu (nhánh thứ 5) | **THẬT** — gọi LLM lần hai, 0 trích dẫn, tin cậy ≤45%, **chỉ khi user bấm** |
+| **Chuyển câu hỏi cho TA** | **MOCK** — dựng đủ tin nhắn (trang + đoạn bôi đen + trace) rồi copy clipboard; **không** có tích hợp Discord/LMS thật |
+| Pane Ghi chú cá nhân hoá | **CHƯA CÓ** — non-goal |
 
-Mọi trích dẫn là chữ có thật trong tài liệu; chỉ câu văn bao quanh là dựng sẵn. GĐ2 thay
-đúng phần văn phong bằng LLM, giữ nguyên lớp grounding và giữ nguyên giọng nói.
+Mọi trích dẫn là chữ có thật trong tài liệu — không phải vì tin lời mô hình, mà vì code
+kiểm lại từng quote xem có nằm trong text trang hay không, không khớp thì bỏ citation đó.
+Nếu bỏ hết thì tự cắt lại quote bằng code và **hạ trần tin cậy xuống 0,70**.
 
 ---
 
@@ -141,17 +86,30 @@ Mọi trích dẫn là chữ có thật trong tài liệu; chỉ câu văn bao q
 
 ```bash
 pip install pypdf
-python dump-pages.py <slide.pdf> ../../tmp/pages.json   # ghi RA NGOÀI repo
-node test-core.mjs ../../tmp/pages.json
+python dump-pages.py ../data/slides/day03.pdf ../../tmp/pages.json   # ghi RA NGOÀI repo
+
+node test-core.mjs      ../../tmp/pages.json    # 4 lớp chỗ khó
+node test-intents.mjs  ../../tmp/pages.json    # bộ định tuyến: 16 intent + bẫy hồi quy
+node ../eval/run-golden.mjs ../../tmp/pages.json --core=real --run=13  # golden set 53 case
 ```
 
-Kết quả trên deck Day 3 (44 trang): **14/14 kịch bản · 24/24 trích dẫn nguyên văn ·
-8/8 phép phủ định.** Cả 3 giao diện đã kiểm bằng Chrome headless (CDP): dựng đủ 44
-khung trang, ảo hoá đúng (< 44 canvas sống), bôi đen được, 5 kịch bản ra đúng nhánh,
-citation nhảy trang + tô đúng đoạn, đổi được sáng/tối, không exception — **14/14 mỗi bản**.
+Kết quả trên deck Day 3 (44 trang):
+
+| Bộ | Kết quả |
+|---|---|
+| `test-core.mjs` | **14/14** kịch bản · **24/24** trích dẫn nguyên văn · **8/8** phép phủ định |
+| `test-intents.mjs` | **101/101** (neo trang · 7 intent mới, mỗi intent ≥1 case âm · bẫy hồi quy) · **27/27** trích dẫn nguyên văn |
+| `eval/run-golden.mjs` (AI thật) | **52/53 = 98,1%** · bar cam kết ≥90% |
+
+`test-intents.mjs` canh riêng cái dễ mất nhất: mở rộng grounding sang `page_text`
+mà **không** chọc lỗ vào cổng chống bịa. Bẫy quan trọng nhất là *bôi đen một đoạn rồi
+hỏi về `streaming`* — phải **vẫn** từ chối.
+
+Bản Console đã kiểm bằng Chrome headless (CDP): 44 khung trang, ảo hoá đúng (4 canvas
+sống), nhãn hiện `AI thật (gemma-4)`, case neo trang trích đúng Tr.37, nhánh ⚠️ ngoài tài
+liệu ra **0 trích dẫn** + tin cậy 45%, chip chuyển TA gọi handler thật, **0 lỗi console**.
 
 > `pages.json` chứa nguyên văn nội dung slide → ghi ra ngoài repo, không commit.
-> `.gitignore` đã chặn `*.pdf`, `pages.json`.
 
 ---
 
@@ -166,6 +124,14 @@ Có ở cả 3 bản (nhãn khác nhau, cùng logic — neo vào deck Day 3, ReA
 | không căn cứ | ① | *"LangGraph có streaming?"* → có LangGraph (Tr.30), không có streaming ở đâu cả → nói thẳng |
 | ngoài phạm vi | ③ | *"làm hộ Lab 3"* → từ chối + chuyển hướng |
 | tiền đề sai | ④ | *"ReAct là fine-tuning?"* → sửa hiểu lầm trước |
+
+Và hai đường lui khi AI bí, **chỉ chạy khi user bấm** (không có nút nào là nút chết —
+chiều D7 trong `eval/run-golden.mjs` tính chip không có handler là **fail**):
+
+| Chip | Làm gì |
+|---|---|
+| **Trả lời ngoài tài liệu ⚠️** | Nhánh quyết định **thứ 5** `outside_document`: gọi LLM lần hai không đưa ngữ cảnh tài liệu, trả **0 trích dẫn**, tin cậy ≤0,45, viền cảnh báo. Vì sao không gọi là `answer`: bất biến #2 nói `answer` ⇒ `citations ≥ 1` |
+| **Chuyển câu này cho TA** | Dựng tin nhắn có câu hỏi + số trang + đoạn bôi đen + trace giải thích vì sao tutor bí, rồi copy clipboard. **Mock có nhãn** — chưa nối Discord thật |
 
 Case ① là case mạnh nhất: tài liệu có `multi-step`/`prompt tuning` nhưng không có
 `multi-agent`/`fine-tuning`. Trả lời cái sau bằng trang của cái trước là kiểu bịa nguy
@@ -184,6 +150,7 @@ hiểm nhất vì nghe rất có lý — `core.mjs` kiểm cụm ghép riêng đ
 | **G9** sửa dễ | Nút Thu hẹp phạm vi | Nút Thu hẹp | Ô nhập luôn nổi, gõ lại tức thì |
 | **G8** gạt bỏ dễ | Nút Ẩn | Nút Ẩn | Nút ✕ trên từng ghim + Dọn bàn |
 | **G15** mời feedback | 👍👎 + lý do | 👍👎 + lý do | 👍👎 trên ghim |
+| **PAIR** lỗi có đường lui | 3 loại lỗi → 3 câu trả lời khác nhau + chip hành động | như Console | chip trên ghim |
 
 ---
 
@@ -196,10 +163,14 @@ kèm lý do. `variant` trong metadata cho biết log đến từ bản nào.
 
 ## Giới hạn đã biết
 
-- Chưa có pane Ghi chú cá nhân hoá (GĐ2).
-- Không có LLM thật (GĐ2) — `realCore()` trong `core.mjs` ném lỗi có chủ đích.
-- Retrieval là keyword + idf, chưa có embedding.
-- Web Speech cần Chrome/Edge; PTalk cần chạy server riêng (tuỳ chọn, xem trên).
-- PDF scan (không có text layer) sẽ không tra cứu được — `dump-pages.py` cảnh báo nếu gặp.
-- Bàn Slide: nhiều ghim cùng lúc trên một trang có thể chồng khoảng cách dọc — dùng
-  *Dọn bàn* giữa các câu hỏi khi demo.
+- **Câu vô nghĩa bằng tiếng Việt có thể được trả lời** thay vì từ chối — case `G06`
+  (`T0115` "điêu toa"), case duy nhất chưa đạt trong golden set. Phép phủ định chỉ áp cho
+  token **không phải âm tiết tiếng Việt**, vì bỏ ràng buộc đó thì học viên gõ không dấu
+  ("khai niem") bị từ chối oan. Không sửa được bằng ngưỡng điểm — đã đo: `"abc def ghi"`
+  ăn 3,81đ (do `def` có trong code Python Tr.33) còn `"điêu toa"` chỉ 2,75đ. Cần embedding.
+- Chưa có pane Ghi chú cá nhân hoá (non-goal).
+- Retrieval là keyword + idf, chưa có embedding (non-goal).
+- Số **98,1%** chỉ chắc trên **một deck** (day03, 44 trang). Chưa đo trên 6 transcript còn lại.
+- Chuyển TA là **mock**: copy clipboard, chưa đẩy vào Discord khoá.
+- PDF scan (không có text layer) không tra cứu được — nhưng **từ chối với lý do riêng**,
+  không lẫn với "tài liệu không chứa" (case `G31`).

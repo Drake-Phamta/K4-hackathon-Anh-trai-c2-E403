@@ -81,6 +81,10 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
 .btn.pri:hover:not(:disabled){filter:brightness(1.1)}
 .btn.sm{padding:3px 7px;font-size:12px}
 .btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+/* mic đang ghi — đỏ + số giây nhảy, người dùng phải THẤY máy đang nghe */
+.btn.rec{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);
+  font-weight:600;font-variant-numeric:tabular-nums;animation:recpulse 1.6s ease-in-out infinite}
+@keyframes recpulse{50%{filter:brightness(1.12)}}
 #pg{display:flex;align-items:center;gap:5px;color:var(--dim);font-family:var(--mono);font-size:12px}
 #pgIn{width:44px;text-align:center;background:var(--sunk);color:var(--fg);
   border:1px solid var(--line);border-radius:5px;padding:3px;font-family:var(--mono)}
@@ -106,26 +110,6 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
   align-items:center;gap:9px}
 #sideHd .t{font-weight:600;font-size:13px}
 #sideHd .s{color:var(--faint);font-size:11px;font-family:var(--mono)}
-
-/* thanh trạng thái giọng nói */
-#vbar{display:flex;align-items:center;gap:9px;padding:8px 13px;
-  border-bottom:1px solid var(--line);background:var(--sunk);font-size:12px}
-#vbar.hide{display:none}
-#orb{width:26px;height:26px;border-radius:50%;flex:0 0 auto;position:relative;
-  background:var(--line);display:grid;place-items:center;transition:background .2s}
-#orb::after{content:"";position:absolute;inset:0;border-radius:50%;
-  border:2px solid var(--accent);opacity:0;transform:scale(1)}
-#orb.live{background:var(--accent)}
-#orb.live::after{opacity:.5;animation:ping 1.4s ease-out infinite}
-#orb.speak{background:var(--ok)}
-@keyframes ping{to{transform:scale(2.1);opacity:0}}
-#vlevel{flex:1;height:4px;background:var(--line);border-radius:3px;overflow:hidden}
-#vlevel i{display:block;height:100%;width:0;background:var(--accent);
-  border-radius:3px;transition:width .07s linear}
-#vtext{color:var(--dim);font-style:italic;flex:1;overflow:hidden;
-  text-overflow:ellipsis;white-space:nowrap}
-#veng{font-family:var(--mono);font-size:10.5px;color:var(--faint);
-  border:1px solid var(--line);padding:1px 6px;border-radius:20px}
 
 #log{flex:1;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:13px}
 .note{background:var(--sunk);border:1px solid var(--line);border-left:3px solid var(--accent);
@@ -179,6 +163,14 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
 .ib.up{color:var(--ok);border-color:var(--ok);background:var(--ok-soft)}
 .ib.dn{color:var(--bad);border-color:var(--bad);background:var(--bad-soft)}
 .fus{display:flex;gap:5px;flex-wrap:wrap}
+.starter{display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+  padding:2px 0 4px;font-size:11.5px;color:var(--faint)}
+/* Chip HÀNH ĐỘNG khác hẳn chip hỏi tiếp: viền liền + đậm hơn. Bấm vào là
+   chạy một việc (gọi nhánh ngoài tài liệu / dựng tin nhắn cho TA), không
+   phải gửi thêm một câu hỏi — nên không được trông giống nhau. */
+.fu.act{border-style:solid;border-color:var(--warn);color:var(--warn);
+  background:var(--warn-soft);font-weight:600}
+.fu.act:hover{border-color:var(--warn);color:var(--warn);filter:brightness(.94)}
 .fu{font-size:11.5px;padding:3px 9px;border-radius:13px;background:transparent;
   border:1px dashed var(--line);color:var(--dim);transition:.12s}
 .fu:hover{border-style:solid;border-color:var(--accent);color:var(--accent)}
@@ -214,7 +206,9 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
 
 <div id="app">
   <div id="bar">
-    <div class="brand">VLearn Slide Tutor <em>console · mock</em></div>
+    <!-- Nhãn nhân AI do initCore() ghi lại lúc nạp. KHÔNG hardcode: người
+         dùng phải biết đang xem AI thật hay văn phong dựng sẵn (HAX G2). -->
+    <div class="brand">VLearn Slide Tutor <em id="coreLabel">console · đang dò nhân…</em></div>
     <button class="btn sm" id="open">Mở PDF</button>
     <div id="pg">
       <button class="btn sm" id="prev" disabled>◀</button>
@@ -225,7 +219,6 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
     <span id="zl" style="font-family:var(--mono);color:var(--dim);min-width:38px;text-align:center;font-size:12px">—</span>
     <button class="btn sm" id="zi" disabled>+</button>
     <div class="sp"></div>
-    <button class="btn sm" id="mic" disabled>🎙 Trò chuyện</button>
     <button class="btn sm" id="theme">◐</button>
     <button class="btn sm" id="dl">⬇ Log</button>
   </div>
@@ -248,15 +241,6 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
           <div class="s" id="docName">chưa nạp tài liệu</div>
         </div>
       </div>
-      <div id="vbar" class="hide">
-        <div id="orb">🎙</div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
-          <div id="vtext">đang nghe…</div>
-          <div id="vlevel"><i></i></div>
-        </div>
-        <span id="veng">browser</span>
-        <button class="btn sm" id="vstop">Dừng</button>
-      </div>
       <div id="log"></div>
       <div id="comp">
         <div id="sel">
@@ -266,6 +250,7 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
         </div>
         <div id="row">
           <textarea id="q" rows="1" placeholder="Hỏi về nội dung slide… (Enter để gửi)" disabled></textarea>
+          <button class="btn" id="mic" disabled>🎙</button>
           <button class="btn pri" id="send" disabled>Gửi</button>
         </div>
         <div id="scen" class="hide">
@@ -286,16 +271,109 @@ code{font-family:var(--mono);font-size:.92em;background:var(--sunk);
 
 <script type="module">
 import { createViewer, injectViewerCSS } from './viewer.mjs';
+import { askTutor, setDocIndex, getLog, attachFeedback, AI_CORE, initCore,
+         askOutside, buildHandoff } from './core.mjs';
+import { $, el, esc, md, DECISION, buildRequest, initTheme, downloadLog,
+         renderFollowUps, copyText } from './ui.mjs';
 import { createVoice } from './voice.mjs';
-import { askTutor, setDocIndex, getLog, attachFeedback, AI_CORE } from './core.mjs';
-import { $, el, esc, md, DECISION, buildRequest, toSpeech, initTheme, downloadLog } from './ui.mjs';
 
 injectViewerCSS();
 const theme = initTheme();
 let sel = null, docName = 'chưa nạp';
 
-const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('on');
-  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), 2300); };
+const toast = (m, ms = 2300) => { const t = $('#toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), ms); };
+
+/* ── dò nhân AI · nói thật đang chạy cái nào (G2) ───────────────────────
+   Có server.mjs + key trong .env  → nhân THẬT (gemma-4).
+   Không có                        → nhân mock, và nhãn phải nói rõ là mock,
+                                     không được để người xem tưởng là AI thật. */
+initCore().then(({ core, model, error }) => {
+  $('#coreLabel').textContent = core === 'real'
+    ? `console · AI thật (${model})`
+    : 'console · nhân mock (không có LLM)';
+  $('#coreLabel').title = core === 'real'
+    ? `Quyết định trung tâm gọi ${model} qua proxy server.mjs. Trích dẫn được kiểm nguyên văn bằng code.`
+    : `Chưa nối được LLM (${error ?? 'không rõ'}). Văn phong câu trả lời là template dựng sẵn — lớp tra cứu và trích dẫn vẫn chạy thật.`;
+});
+
+/* ── voice: bấm–nói–bấm + đọc câu trả lời (API PTIT qua proxy) ───────
+   Một lần ghi = một request, có đồng hồ đếm giây (bài học §9 — auto-chunk
+   3,5s làm hàng đợi phình 9,4× thời gian thực). Mic chỉ sáng khi CẢ PDF đã
+   nạp LẪN health probe xanh; probe đỏ thì nút vẫn hiện nhưng disabled kèm
+   tooltip nói vì sao — hệ thống đang kém thì phải nói ra (G2), giấu nút đi
+   là người dùng tưởng tính năng không tồn tại. */
+let voiceOk = false, micState = 'idle', curSpk = null, viaVoice = false;
+const voice = createVoice({
+  onTimer: s => {
+    if (micState !== 'recording') return;
+    $('#mic').textContent = `⏹ ${s}s`;
+    if (s >= 60){ toast('Đã ghi 60 giây — tự dừng và gửi'); finishRecording(); }
+  },
+});
+function syncMic(){
+  const m = $('#mic');
+  m.disabled = !(voiceOk && viewer.total) || micState === 'processing';
+  m.title = voiceOk
+    ? 'Hỏi bằng giọng nói — bấm để ghi, bấm lần nữa để gửi'
+    : 'Dịch vụ giọng nói (PTIT) không kết nối được — gõ câu hỏi thay nhé';
+}
+voice.probeHealth().then(ok => { voiceOk = ok; syncMic(); });
+
+function resetMic(){
+  micState = 'idle';
+  $('#mic').textContent = '🎙';
+  $('#mic').classList.remove('rec');
+  syncMic();
+}
+async function finishRecording(){
+  if (micState !== 'recording') return;
+  micState = 'processing';
+  const m = $('#mic');
+  m.classList.remove('rec'); m.textContent = '…'; m.disabled = true;
+  try{
+    const wav = await voice.stopRecording();
+    if (!wav){ toast('Không nghe rõ — thử nói gần micro hơn'); return resetMic(); }
+    const text = (await voice.transcribe(wav)).trim();
+    if (!text){ toast('Không nghe rõ — thử nói gần micro hơn'); return resetMic(); }
+    /* Điền vào ô rồi gửi luôn — một cử chỉ. Câu nhận diện vẫn hiện thành
+       bubble của người dùng nên nhận sai là thấy ngay và hỏi lại được. */
+    $('#q').value = text;
+    resetMic();
+    viaVoice = true;         // câu hỏi bằng giọng → answer về là sưởi TTS sẵn
+    send();
+  }catch(err){
+    console.error('[voice]', err);
+    toast('Nhận diện giọng nói lỗi — thử lại hoặc gõ câu hỏi');
+    resetMic();
+  }
+}
+$('#mic').onclick = async () => {
+  if (micState === 'recording') return finishRecording();
+  if (micState !== 'idle') return;
+  try{
+    await voice.startRecording();
+    micState = 'recording';
+    $('#mic').classList.add('rec');
+    $('#mic').textContent = '⏹ 0s';
+  }catch(err){
+    console.error('[voice]', err);
+    toast('Không có quyền micro — cấp quyền trong trình duyệt rồi thử lại');
+  }
+};
+/* Đọc to một câu trả lời; bấm lại là dừng; bấm 🔊 ở bubble khác thì cắt
+   cái đang phát (speak() tự stopSpeaking trước). */
+async function speakAnswer(btn, text){
+  if (curSpk === btn){ voice.stopSpeaking(); return; }   // đang phát chính nó → dừng
+  if (curSpk){ curSpk.textContent = '🔊 Đọc'; }          // cắt bubble khác
+  curSpk = btn; btn.textContent = '⏹ Dừng';
+  try{ await voice.speak(text); }
+  catch(err){ console.error('[voice]', err); toast('Không đọc được — dịch vụ TTS lỗi'); }
+  finally{
+    if (curSpk === btn) curSpk = null;
+    btn.textContent = '🔊 Đọc';
+  }
+}
 
 /* ── viewer ────────────────────────────────────────────────────────── */
 const viewer = createViewer({
@@ -308,7 +386,8 @@ const viewer = createViewer({
     $('#empty').style.display = 'none';
     $('#pgTot').textContent = '/ ' + total;
     $('#zl').textContent = '100%';
-    ['prev','next','zi','zo','pgIn','q','send','mic'].forEach(i => $('#'+i).disabled = false);
+    ['prev','next','zi','zo','pgIn','q','send'].forEach(i => $('#'+i).disabled = false);
+    syncMic();          // mic sáng riêng: cần CẢ PDF lẫn health probe voice xanh
     $('#scen').classList.remove('hide');
     greet(total);
     const ok = pages.filter(p => p.text.length > 20).length;
@@ -324,41 +403,30 @@ const viewer = createViewer({
   },
 });
 
-/* ── giọng nói ─────────────────────────────────────────────────────── */
-const voice = createVoice({
-  onPartial: t => { $('#vtext').textContent = t || 'đang nghe…'; },
-  onFinal: t => { $('#q').value = t; send(); },
-  onLevel: v => { $('#vlevel').firstElementChild.style.width = (v * 100) + '%'; },
-  onState: s => {
-    const orb = $('#orb');
-    orb.classList.toggle('live', s === 'listening');
-    orb.classList.toggle('speak', s === 'speaking');
-    if (s === 'thinking') $('#vtext').textContent = 'đang nhận diện…';
-    if (s === 'speaking') $('#vtext').textContent = 'tutor đang nói… (nói để ngắt lời)';
-    if (s.startsWith?.('error')) toast('Giọng nói: ' + s.slice(6));
-  },
-});
-
-$('#mic').onclick = async () => {
-  if (voice.listening){ voice.stop(); $('#vbar').classList.add('hide'); $('#mic').classList.remove('on'); return; }
-  if (await voice.probe()){ voice.setEngine('ptalk'); $('#veng').textContent = 'ptalk (vi)'; }
-  else { $('#veng').textContent = 'browser'; }
-  try{
-    await voice.start();
-    $('#vbar').classList.remove('hide');
-    $('#mic').classList.add('on');
-  }catch(err){ toast(err.message); }
-};
-$('#vstop').onclick = () => { voice.stop(); $('#vbar').classList.add('hide'); $('#mic').classList.remove('on'); };
-
 /* ── hội thoại ─────────────────────────────────────────────────────── */
 function greet(total){
   $('#log').replaceChildren();
   const n = el('div','note');
   n.innerHTML = `<b>Mình trả lời dựa trên tài liệu đang mở</b> (${total} trang), luôn kèm số trang để bạn tự kiểm.
     Ngoài tài liệu mình nói rõ là ngoài, không trộn vào.<br>
-    <span style="color:var(--faint)">Bôi đen một đoạn rồi bấm “Hỏi về đoạn này”, hoặc bấm 🎙 để nói chuyện.</span>`;
+    <span style="color:var(--faint)">Bôi đen một đoạn rồi bấm “Hỏi về đoạn này”, hoặc gõ câu hỏi bên dưới.</span>`;
   $('#log').append(n);
+
+  /* Ba câu mở màn bấm được. Vòng validation là 10 phút/người và mình phải
+     IM LẶNG quan sát — người thử ngồi trước ô nhập trống mà không biết gõ gì
+     là mất luôn mấy phút đầu. Ba câu này cũng là ba dạng khác nhau: cấu trúc
+     tài liệu · trang đang xem · một câu KHÔNG có trong tài liệu (để họ thấy
+     nó từ chối thế nào — thứ đáng xem nhất). */
+  const s = el('div','starter');
+  s.innerHTML = '<span>Thử ngay:</span>';
+  for (const q of ['Tài liệu này gồm những phần nào?',
+                   'Tóm tắt trang mình đang xem',
+                   'LangGraph có hỗ trợ streaming không?']){
+    const b = el('button','fu', q);
+    b.onclick = () => { $('#q').value = q; send(); };
+    s.append(b);
+  }
+  $('#log').append(s);
 }
 
 function addUser(q, s){
@@ -379,7 +447,9 @@ function addWait(){
   return m;
 }
 
-function addAI(res, node){
+/* `req` là AskRequest đã sinh ra res — cần giữ lại để chip hành động dựng
+   được tin nhắn chuyển TA và gọi lại nhánh ngoài tài liệu đúng ngữ cảnh. */
+function addAI(res, node, req){
   node.replaceChildren();
   const d = el('details','tr'); d.open = true;
   d.append(el('summary', null, `workflow · ${res.trace.length} bước · ${res.latency_ms}ms`));
@@ -427,27 +497,84 @@ function addAI(res, node){
   const ok = el('button','btn sm','Gửi');
   why.append(inp, ok);
   up.onclick = () => { up.classList.toggle('up'); dn.classList.remove('dn'); why.style.display='none'; attachFeedback('up',''); };
-  dn.onclick = () => { dn.classList.add('dn'); up.classList.remove('up'); why.style.display='flex'; inp.focus(); };
+  dn.onclick = () => {
+    dn.classList.add('dn'); up.classList.remove('up');
+    why.style.display = 'flex'; inp.focus();
+    /* Bấm 👎 xong thì đưa luôn đường sửa, đừng bắt người ta tự nghĩ ra cách
+       nói lại (G9 — sửa dễ). Trang vừa trích là phạm vi hẹp hợp lý nhất. */
+    const pg = res.citations?.[0]?.page;
+    if (pg && !why.querySelector('.retry')){
+      const rb = el('button','btn sm retry', `Hỏi lại, chỉ trong Trang ${pg}`);
+      rb.onclick = () => { $('#q').value = `Chỉ trả lời trong phạm vi Trang ${pg}: `; $('#q').focus(); };
+      why.append(rb);
+    }
+  };
   ok.onclick = () => { attachFeedback('down', inp.value); why.style.display='none'; toast('Đã ghi vào log phiên'); };
+
+  /* Copy KEM SO TRANG — dán vào ghi chú mà mất nguồn thì câu trả lời thành
+     tin đồn. Đây là chỗ rẻ nhất để giữ được tính kiểm chứng ra ngoài app. */
+  const cp = el('button','btn sm','Chép');
+  cp.title = 'Chép câu trả lời kèm số trang trích dẫn';
+  cp.onclick = async () => {
+    const src = (res.citations ?? [])
+      .map(c => `Trang ${c.ref}: "${c.quote}"`).join('\n');
+    const txt = `${res.answer}\n\n— Nguồn (${docName}):\n${src || '(không có trích dẫn)'}`;
+    toast(await copyText(txt) ? '📋 Đã chép câu trả lời kèm nguồn' : 'Không chép được');
+  };
 
   const nar = el('button','btn sm','Thu hẹp phạm vi');
   nar.onclick = () => { $('#q').value = `Chỉ trả lời trong phạm vi Trang ${res.citations[0]?.page ?? viewer.page}: `; $('#q').focus(); };
+
+  /* Đọc to bằng giọng PTIT — cùng nguồn với STT, không dùng giọng trình
+     duyệt (đã dính vụ giọng Anh đọc tiếng Việt im lặng, §9/G2). Voice chết
+     thì nút disabled kèm lý do, không giấu. */
   const spk = el('button','btn sm','🔊 Đọc');
-  spk.onclick = () => voice.speak(toSpeech(res));
+  if (voiceOk){
+    spk.title = 'Đọc câu trả lời (giọng PTIT)';
+    spk.onclick = () => speakAnswer(spk, res.answer);
+  } else {
+    spk.disabled = true;
+    spk.title = 'Dịch vụ giọng nói (PTIT) không kết nối được';
+  }
+
   const fold = el('button','btn sm','✕ Ẩn');
   fold.onclick = () => node.classList.toggle('fold');
-  acts.append(up, dn, nar, spk, el('span','sp'), fold);
+  acts.append(up, dn, nar, cp, spk, el('span','sp'), fold);
   node.append(acts, why);
 
-  if (res.follow_ups?.length){
-    const f = el('div','fus');
-    res.follow_ups.forEach(t => {
-      const btn = el('button','fu', t);
-      btn.onclick = () => { $('#q').value = t; send(); };
-      f.append(btn);
-    });
-    node.append(f);
-  }
+  /* ── follow-up: chip HỎI TIẾP và chip HÀNH ĐỘNG ─────────────────────
+     Trước bản này mọi chip đều bị nhồi vào ô nhập rồi gửi đi, nên bấm
+     "Chuyển câu này cho TA" là gửi đúng chuỗi đó làm câu hỏi mới → ra kết
+     quả vô nghĩa. Giờ chip hành động gọi handler thật; chip nào không có
+     handler thì renderFollowUps() không vẽ (xem ui.mjs). */
+  const f = el('div','fus');
+  renderFollowUps(res, f, {
+    question: label => { $('#q').value = label; send(); },
+
+    /* Đường lui ①: chỉ mở khi NGƯỜI DÙNG bấm — AI không tự bước ra ngoài
+       tài liệu. Đây là mức automation Conditional ở dạng code. */
+    answer_outside: async () => {
+      const n2 = addWait();
+      try{
+        const out = await askOutside(req);
+        addAI(out, n2, req);
+      }catch(err){
+        n2.replaceChildren(el('div','bub','Không gọi được mô hình: ' + err.message));
+      }
+    },
+
+    /* Đường lui ②: dựng đủ ngữ cảnh để TA không phải hỏi lại học viên
+       "bạn đang ở trang nào". MOCK có nhãn — không có tích hợp Discord thật. */
+    handoff_ta: async () => {
+      const msg = buildHandoff(req, res);
+      const ok = await copyText(msg);
+      toast(ok
+        ? '📋 Đã copy tin nhắn cho TA — kèm số trang, đoạn bôi đen và lý do tutor không trả lời được. Dán vào Discord khoá (bản demo chưa nối Discord thật).'
+        : 'Không copy được — tin nhắn đã in ra Console (F12).', 4200);
+      if (!ok) console.log(msg);
+    },
+  }, { q:'fu', a:'fu act' });
+  if (f.childElementCount) node.append(f);
   scroll();
 }
 
@@ -462,13 +589,18 @@ async function send(){
   sel = null; $('#sel').classList.remove('on'); $('#pop').classList.remove('on');
 
   const node = addWait();
+  const fromVoice = viaVoice; viaVoice = false;
   try{
-    const res = await askTutor(buildRequest({
+    const request = buildRequest({
       question: q, selection: s, viewer, docName,
       history: getLog().slice(-4).map(l => ({ role:'user', content:l.request.question })),
-    }));
-    addAI(res, node);
-    if (voice.listening) voice.speak(toSpeech(res));
+    });
+    const res = await askTutor(request);
+    addAI(res, node, request);
+    /* Hỏi bằng giọng thì khả năng cao sẽ muốn NGHE đáp — tổng hợp sẵn câu
+       đầu ngay lúc này, bấm 🔊 là ra tiếng liền. Chỉ khi hỏi bằng giọng,
+       để không tốn request TTS cho người chỉ gõ phím. */
+    if (fromVoice && voiceOk) voice.prefetch(res.answer);
   }catch(err){
     node.replaceChildren(el('div','bub','Lỗi core: ' + err.message));
   }
@@ -482,18 +614,23 @@ const SCEN = {
   oos:{p:40,q:'Làm hộ mình Lab 3 với, cho mình đáp án luôn.'},
   domain:{p:20,q:'ReAct là một kiểu fine-tuning đúng không?'},
 };
-document.querySelectorAll('#scen .fu').forEach(b => b.onclick = () => {
+document.querySelectorAll('#scen .fu').forEach(b => b.onclick = async () => {
   const s = SCEN[b.dataset.s];
   if (!s || !viewer.total) return;
-  viewer.goTo(Math.min(s.p, viewer.total));
+  const p = Math.min(s.p, viewer.total);
+  viewer.goTo(p);
   if (s.s){
-    sel = { text: viewer.pageText(Math.min(s.p, viewer.total)).slice(0,220), page: Math.min(s.p, viewer.total) };
+    sel = { text: viewer.pageText(p).slice(0,220), page: p };
     $('#sel').classList.add('on');
     $('#selPg').textContent = sel.page;
     $('#selTx').textContent = '“' + sel.text.slice(0,70) + '…”';
   }
   $('#q').value = s.q;
-  setTimeout(send, 260);
+  /* PHẢI chờ cuộn tới đúng trang trước khi gửi. Cuộn mượt qua mấy chục trang
+     mất hơn 260ms, mà giờ page_text của trang hiện tại là nguồn sự thật —
+     gửi sớm là tutor tóm tắt sai trang. */
+  await viewer.settled();
+  send();
 });
 
 /* ── wiring ────────────────────────────────────────────────────────── */
