@@ -22,6 +22,7 @@ type VoiceApi = {
   stopSpeaking: () => void;
   prefetch: (t: string) => void;
   probeHealth: () => Promise<boolean>;
+  destroy: () => void;
   readonly state: VoiceState;
   readonly recording: boolean;
   readonly speaking: boolean;
@@ -29,31 +30,31 @@ type VoiceApi = {
 
 export function useVoice() {
   const ref = useRef<VoiceApi | null>(null);
-  const built = useRef(false);
   const [state, setState] = useState<VoiceState>('idle');
   const [seconds, setSeconds] = useState(0);
   const [level, setLevel] = useState(0);
   const [healthy, setHealthy] = useState<boolean | null>(null);   // null = chưa dò xong
 
   useEffect(() => {
-    if (built.current) return;
-    built.current = true;
     let disposed = false;
+    let instance: VoiceApi | null = null;
 
     (async () => {
       const { createVoice } = await import('@/lib/voice.mjs');
       if (disposed) return;
-      ref.current = createVoice({
-        onState: (s: VoiceState) => setState(s),
-        onTimer: (n: number) => setSeconds(n),
-        onLevel: (v: number) => setLevel(v),
+      instance = createVoice({
+        onState: (s: VoiceState) => { if (!disposed) setState(s); },
+        onTimer: (n: number) => { if (!disposed) setSeconds(n); },
+        onLevel: (v: number) => { if (!disposed) setLevel(v); },
       }) as VoiceApi;
-      ref.current.probeHealth().then(ok => { if (!disposed) setHealthy(ok); });
+      ref.current = instance;
+      instance.probeHealth().then(ok => { if (!disposed) setHealthy(ok); });
     })();
 
     return () => {
       disposed = true;
-      ref.current?.stopSpeaking();
+      instance?.destroy();
+      if (ref.current === instance) ref.current = null;
     };
   }, []);
 
@@ -69,3 +70,5 @@ export function useVoice() {
     prefetch:   useCallback((t: string) => ref.current?.prefetch(t), []),
   };
 }
+
+export type VoiceController = ReturnType<typeof useVoice>;

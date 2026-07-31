@@ -8,11 +8,11 @@
    Logic AI không đổi một dòng: core.mjs / viewer.mjs / voice.mjs / ui.mjs
    được nạp động trong hook, chỉ vòng đời là của React.
    ══════════════════════════════════════════════════════════════════════════ */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import s from './console.module.css';
-import { useViewer, type Selection } from '@/hooks/useViewer';
+import { useViewer, type Selection, type ViewerController } from '@/hooks/useViewer';
 import { useVoice } from '@/hooks/useVoice';
-import { useTutor, type AskResponse, type Turn } from '@/hooks/useTutor';
+import { useTutor, type Turn } from '@/hooks/useTutor';
 import { Answer } from '@/components/Answer';
 
 const SCEN: Record<string, { p: number; q: string; s?: boolean }> = {
@@ -53,7 +53,10 @@ export default function ConsolePage() {
   const tutor = useTutor();
   const voice = useVoice();
 
-  const viewer = useViewer({
+  const {
+    containerRef, getApi, page, total, ready, load, goTo, settled,
+    highlight, setZoom, fitWidth, anchorOf, pageText, thumb,
+  } = useViewer({
     onReady: ({ total, pages, name }) => {
       tutor.setDocIndex(pages);
       const dn = `${name} · ${total} trang`;
@@ -67,6 +70,10 @@ export default function ConsolePage() {
       setPopAt(sl?.rect ? { x: Math.max(6, sl.rect.left + sl.rect.width / 2 - 80), y: Math.max(6, sl.rect.top - 40) } : null);
     },
   });
+  const viewer = useMemo(() => ({
+    getApi, page, total, ready, load, goTo, settled,
+    highlight, setZoom, fitWidth, anchorOf, pageText, thumb,
+  }), [getApi, page, total, ready, load, goTo, settled, highlight, setZoom, fitWidth, anchorOf, pageText, thumb]);
 
   /* cuộn khung chat xuống đáy mỗi khi có lượt mới hoặc lượt cũ có kết quả */
   useEffect(() => {
@@ -93,7 +100,9 @@ export default function ConsolePage() {
     setSel(null); setPopAt(null);
 
     const fromVoice = viaVoice.current; viaVoice.current = false;
-    const out = await tutor.ask({ question: q, selection: used, viewer: viewer.viewer.current, docName });
+    const api = viewer.getApi();
+    if (!api) return;
+    const out = await tutor.ask({ question: q, selection: used, viewer: api, docName });
 
     /* Hỏi bằng giọng thì khả năng cao muốn NGHE đáp — sưởi sẵn câu đầu để bấm
        🔊 là ra tiếng liền. Chỉ khi hỏi bằng giọng, không tốn request TTS cho
@@ -134,8 +143,11 @@ export default function ConsolePage() {
   /* tự dừng ở 60s — tránh một lần ghi lỡ tay thành file khổng lồ */
   useEffect(() => {
     if (micState === 'recording' && voice.seconds >= 60) {
-      toast('Đã ghi 60 giây — tự dừng và gửi');
-      finishRecording();
+      const timer = setTimeout(() => {
+        toast('Đã ghi 60 giây — tự dừng và gửi');
+        void finishRecording();
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [voice.seconds, micState, finishRecording, toast]);
 
@@ -148,9 +160,9 @@ export default function ConsolePage() {
     const qs = new URLSearchParams(location.search).get('file');
     if (!qs) return;
     fetch(qs).then(r => r.arrayBuffer())
-      .then(b => viewer.load(new Uint8Array(b), qs.split('/').pop() ?? 'slide.pdf'))
+      .then(b => load(new Uint8Array(b), qs.split('/').pop() ?? 'slide.pdf'))
       .catch(e => toast('Không nạp được ?file= — ' + e.message));
-  }, [viewer, toast]);
+  }, [load, toast]);
 
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
@@ -162,14 +174,15 @@ export default function ConsolePage() {
 
   useEffect(() => {
     const onResize = () => {
-      if (viewer.total) viewer.fitWidth()?.then(() => viewer.setZoom(viewer.viewer.current!.fit));
+      const api = viewer.getApi();
+      if (viewer.total && api) viewer.fitWidth()?.then(() => viewer.setZoom(api.fit));
     };
     addEventListener('resize', onResize);
     return () => removeEventListener('resize', onResize);
   }, [viewer]);
 
   const zoom = (d: number) => {
-    const v = viewer.viewer.current;
+    const v = viewer.getApi();
     if (!v) return;
     const next = v.scale + d;
     viewer.setZoom(next);
@@ -204,7 +217,7 @@ export default function ConsolePage() {
         {/* Nhãn nhân AI do initCore() ghi lại. KHÔNG hardcode: người dùng phải
             biết đang xem AI thật hay văn phong dựng sẵn (HAX G2). */}
         <div className={s.brand}>VLearn Slide Tutor <em title={coreTitle}>{coreLabel}</em></div>
-        <button className={`${s.btn} ${s.sm}`} onClick={() => fileRef.current?.click()}>Mở PDF</button>
+        <button className={`${s.btn} ${s.sm}`} data-testid="open-pdf" onClick={() => fileRef.current?.click()}>Mở PDF</button>
         <div className={s.pg}>
           <button className={`${s.btn} ${s.sm}`} disabled={!viewer.total} onClick={() => viewer.goTo(viewer.page - 1)}>◀</button>
           <input
@@ -244,7 +257,7 @@ export default function ConsolePage() {
             else toast('Cần một file PDF');
           }}
         >
-          <div ref={viewer.containerRef} />
+          <div ref={containerRef} data-testid="viewer-root" />
           {!viewer.total && (
             <div className={s.empty}>
               <h2>Chưa có tài liệu</h2>
@@ -298,7 +311,7 @@ export default function ConsolePage() {
               <button className={`${s.btn} ${s.sm}`} onClick={() => setSel(null)}>✕</button>
             </div>
             <div className={s.row}>
-              <textarea
+              <textarea data-testid="question"
                 ref={qRef} className={s.q} rows={1} disabled={!viewer.total}
                 placeholder="Hỏi về nội dung slide… (Enter để gửi)"
                 defaultValue={question}
@@ -315,7 +328,7 @@ export default function ConsolePage() {
               >
                 {micState === 'recording' ? `⏹ ${voice.seconds}s` : micState === 'processing' ? '…' : '🎙'}
               </button>
-              <button className={`${s.btn} ${s.pri}`} disabled={!viewer.total} onClick={() => send()}>Gửi</button>
+              <button className={`${s.btn} ${s.pri}`} data-testid="send" disabled={!viewer.total} onClick={() => send()}>Gửi</button>
             </div>
             {viewer.total > 0 && (
               <div className={s.scen}>
@@ -346,7 +359,7 @@ export default function ConsolePage() {
         </div>
       )}
 
-      <input ref={fileRef} type="file" accept="application/pdf" hidden
+      <input ref={fileRef} data-testid="pdf-input" type="file" accept="application/pdf" hidden
              onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); }} />
       <div className={`${s.toast} ${toastMsg ? s.toastOn : ''}`}>{toastMsg}</div>
     </div>
@@ -355,7 +368,7 @@ export default function ConsolePage() {
 
 /* Một lượt hỏi-đáp: bubble người dùng + (đang chờ | câu trả lời) */
 function TurnView(props: {
-  turn: Turn; styles: typeof s; viewer: ReturnType<typeof useViewer>;
+  turn: Turn; styles: typeof s; viewer: Omit<ViewerController, 'containerRef'>;
   tutor: ReturnType<typeof useTutor>; voice: ReturnType<typeof useVoice>;
   voiceOk: boolean; docName: string;
   toast: (m: string, ms?: number) => void;

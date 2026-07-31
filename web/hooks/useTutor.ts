@@ -11,7 +11,7 @@
    tệ hơn không có nhãn.
    ══════════════════════════════════════════════════════════════════════════ */
 import { useEffect, useRef, useState, useCallback } from 'react';
-import type { Selection } from './useViewer';
+import type { Selection, ViewerApi } from './useViewer';
 
 export type Citation = { kind: string; ref: string; page: number; quote: string };
 export type TraceStep = { step: string; detail: string; ms: number };
@@ -42,26 +42,43 @@ export type Turn = {
 };
 
 type CoreInfo = { core: 'mock' | 'real'; model: string | null; error: string | null } | null;
+type AskRequest = Record<string, unknown>;
+type BuildRequestArgs = {
+  question: string;
+  selection: Selection;
+  viewer: ViewerApi;
+  docName: string;
+  history: Array<{ role: 'user'; content: string }>;
+};
+type UiModule = { buildRequest: (args: BuildRequestArgs) => AskRequest };
+type CoreModule = {
+  initCore: () => Promise<NonNullable<CoreInfo>>;
+  setDocIndex: (pages: { page: number; text: string }[]) => void;
+  getLog: () => Array<{ request: { question: string } }>;
+  askTutor: (req: AskRequest) => Promise<AskResponse>;
+  askOutside: (req: unknown) => Promise<AskResponse>;
+  buildHandoff: (req: unknown, res: AskResponse) => string;
+  attachFeedback: (rating: 'up' | 'down', why: string) => void;
+};
 
 let seq = 0;
 const nextId = () => `t${++seq}`;
 
 export function useTutor() {
-  const mod = useRef<any>(null);
-  const built = useRef(false);
+  const mod = useRef<CoreModule | null>(null);
   const [coreInfo, setCoreInfo] = useState<CoreInfo>(null);
   const [turns, setTurns] = useState<Turn[]>([]);
 
   useEffect(() => {
-    if (built.current) return;
-    built.current = true;
     let disposed = false;
     (async () => {
-      mod.current = await import('@/lib/core.mjs');
-      const info = await mod.current.initCore();
+      const core = await import('@/lib/core.mjs') as CoreModule;
+      if (disposed) return;
+      mod.current = core;
+      const info = await core.initCore();
       if (!disposed) setCoreInfo(info);
     })();
-    return () => { disposed = true; };
+    return () => { disposed = true; mod.current = null; };
   }, []);
 
   const setDocIndex = useCallback((pages: { page: number; text: string }[]) => {
@@ -75,10 +92,10 @@ export function useTutor() {
   const ask = useCallback(async (args: {
     question: string;
     selection: Selection;
-    viewer: any;
+    viewer: ViewerApi;
     docName: string;
   }) => {
-    const { buildRequest } = await import('@/lib/ui.mjs');
+    const { buildRequest } = await import('@/lib/ui.mjs') as unknown as UiModule;
     const core = mod.current;
     if (!core) return null;
 
@@ -87,7 +104,7 @@ export function useTutor() {
       selection: args.selection,
       viewer: args.viewer,
       docName: args.docName,
-      history: core.getLog().slice(-4).map((l: any) => ({ role: 'user', content: l.request.question })),
+      history: core.getLog().slice(-4).map(l => ({ role: 'user', content: l.request.question })),
     });
 
     const id = nextId();
@@ -96,8 +113,8 @@ export function useTutor() {
       const res: AskResponse = await core.askTutor(req);
       patch(id, { res });
       return { id, req, res };
-    } catch (e: any) {
-      patch(id, { error: e?.message ?? 'lỗi không rõ' });
+    } catch (e: unknown) {
+      patch(id, { error: e instanceof Error ? e.message : 'lỗi không rõ' });
       return null;
     }
   }, []);
@@ -113,8 +130,8 @@ export function useTutor() {
       const res: AskResponse = await core.askOutside(req);
       patch(id, { res });
       return { id, res };
-    } catch (e: any) {
-      patch(id, { error: e?.message ?? 'lỗi không rõ' });
+    } catch (e: unknown) {
+      patch(id, { error: e instanceof Error ? e.message : 'lỗi không rõ' });
       return null;
     }
   }, []);
@@ -131,3 +148,5 @@ export function useTutor() {
 
   return { coreInfo, turns, ask, askOutside, buildHandoff, attachFeedback, getLog, setDocIndex, clear };
 }
+
+export type TutorController = ReturnType<typeof useTutor>;

@@ -255,9 +255,23 @@ export function createVoice({ onState, onTimer, onLevel } = {}){
     }catch{ return false; }
   }
 
+  function destroy(){
+    clearInterval(timerId);
+    cancelAnimationFrame(levelRaf);
+    try{ proc?.disconnect(); }catch{}
+    proc = null; analyser = null;
+    stream?.getTracks().forEach(t => t.stop()); stream = null;
+    ac?.close?.().catch(() => {}); ac = null;
+    chunks = [];
+    stopSpeaking();
+    ttsCache.clear();
+    setState('idle');
+    onTimer?.(0); onLevel?.(0);
+  }
+
   return {
     startRecording, stopRecording, transcribe, speak, stopSpeaking, prefetch, probeHealth,
-    stripMd,
+    stripMd, destroy,
     get state(){ return state; },
     get recording(){ return state === 'recording'; },
     get speaking(){ return state === 'speaking'; },

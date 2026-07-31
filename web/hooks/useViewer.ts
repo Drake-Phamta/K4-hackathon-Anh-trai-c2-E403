@@ -20,7 +20,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 export type Selection = { text: string; page: number; rect?: DOMRect | null } | null;
 export type PageInfo = { page: number; text: string };
 
-type ViewerApi = {
+export type ViewerApi = {
   load: (data: Uint8Array, name: string) => Promise<{ total: number; pages: PageInfo[] }>;
   goTo: (p: number, smooth?: boolean) => void;
   /* Chờ cuộn mượt tới đúng trang rồi mới resolve. BẮT BUỘC gọi trước khi gửi
@@ -34,6 +34,7 @@ type ViewerApi = {
   anchorOf: (page: number) => { page: DOMRect; hit: DOMRect | null } | null;
   pageText: (n: number) => string;
   thumb: (n: number, w?: number) => Promise<string>;
+  destroy: () => void;
   readonly total: number;
   readonly page: number;
   readonly pages: PageInfo[];
@@ -44,11 +45,11 @@ type ViewerApi = {
 export function useViewer(opts: {
   onReady?: (info: { total: number; pages: PageInfo[]; name: string }) => void;
   onSelection?: (sel: Selection) => void;
+  onPageRendered?: (page: number) => void;
   gap?: number;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewerRef = useRef<ViewerApi | null>(null);
-  const builtRef = useRef(false);          // ← chốt chặn StrictMode double-mount
 
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -58,20 +59,20 @@ export function useViewer(opts: {
      component thì đổi mỗi lần render. Đưa thẳng vào deps của effect là dựng
      lại viewer sau mỗi lần render. */
   const cb = useRef(opts);
-  cb.current = opts;
+  useEffect(() => { cb.current = opts; });
 
   useEffect(() => {
-    if (builtRef.current || !containerRef.current) return;
-    builtRef.current = true;
-
+    const container = containerRef.current;
+    if (!container) return;
     let disposed = false;
+    let instance: ViewerApi | null = null;
 
     (async () => {
       const { createViewer, injectViewerCSS } = await import('@/lib/viewer.mjs');
       if (disposed) return;
       injectViewerCSS();
-      viewerRef.current = createViewer({
-        container: containerRef.current,
+      instance = createViewer({
+        container,
         gap: cb.current.gap ?? 18,
         onPage: (p: number) => setPage(p),
         onReady: (info: { total: number; pages: PageInfo[]; name: string }) => {
@@ -80,10 +81,16 @@ export function useViewer(opts: {
           cb.current.onReady?.(info);
         },
         onSelection: (s: Selection) => cb.current.onSelection?.(s),
+        onPageRendered: (p: number) => cb.current.onPageRendered?.(p),
       }) as ViewerApi;
+      viewerRef.current = instance;
     })();
 
-    return () => { disposed = true; };
+    return () => {
+      disposed = true;
+      instance?.destroy();
+      if (viewerRef.current === instance) viewerRef.current = null;
+    };
   }, []);
 
   const load = useCallback(async (data: Uint8Array, name: string) => {
@@ -94,7 +101,7 @@ export function useViewer(opts: {
 
   return {
     containerRef,
-    viewer: viewerRef,
+    getApi: useCallback(() => viewerRef.current, []),
     page, total, ready,
     load,
     goTo:      useCallback((p: number, smooth = true) => viewerRef.current?.goTo(p, smooth), []),
@@ -107,3 +114,5 @@ export function useViewer(opts: {
     thumb:     useCallback((n: number, w?: number) => viewerRef.current?.thumb(n, w), []),
   };
 }
+
+export type ViewerController = ReturnType<typeof useViewer>;

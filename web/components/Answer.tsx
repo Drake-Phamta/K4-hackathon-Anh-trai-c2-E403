@@ -15,17 +15,22 @@
    · Voice chết thì nút Đọc disabled kèm lý do, không giấu (G2).
    ══════════════════════════════════════════════════════════════════════════ */
 import { useEffect, useRef, useState } from 'react';
-import type { AskResponse, FollowUp } from '@/hooks/useTutor';
+import type { AskResponse, FollowUp, TutorController } from '@/hooks/useTutor';
+import type { ViewerController } from '@/hooks/useViewer';
+import type { VoiceController } from '@/hooks/useVoice';
 
 type Props = {
   res: AskResponse;
   req: unknown;
   styles: Record<string, string>;
-  viewer: any; tutor: any; voice: any;
+  viewer: Omit<ViewerController, 'containerRef'>;
+  tutor: TutorController;
+  voice: VoiceController;
   voiceOk: boolean; docName: string;
   toast: (m: string, ms?: number) => void;
   onAsk: (q: string) => void;
   onFill: (v: string) => void;
+  traceOpen?: boolean;
 };
 
 const DECISION: Record<string, { label: string; icon: string; tone: string }> = {
@@ -46,7 +51,7 @@ const md = (x: string) => esc(x)
   .replace(/\*(.+?)\*/g, '<i>$1</i>')
   .replace(/`(.+?)`/g, '<code>$1</code>');
 
-export function Answer({ res, req, styles: c, viewer, tutor, voice, voiceOk, docName, toast, onAsk, onFill }: Props) {
+export function Answer({ res, req, styles: c, viewer, tutor, voice, voiceOk, docName, toast, onAsk, onFill, traceOpen = true }: Props) {
   const [vote, setVote] = useState<'' | 'up' | 'down'>('');
   const [whyOpen, setWhyOpen] = useState(false);
   const [why, setWhy] = useState('');
@@ -106,7 +111,7 @@ export function Answer({ res, req, styles: c, viewer, tutor, voice, voiceOk, doc
   return (
     <>
       <div className={folded ? c.fold : undefined}>
-        <details className={c.tr} open>
+        <details className={c.tr} open={traceOpen} data-testid="trace">
           <summary>workflow · {res.trace?.length ?? 0} bước · {res.latency_ms}ms</summary>
           <ol>
             {(res.trace ?? []).map((t, i) => (
@@ -116,7 +121,7 @@ export function Answer({ res, req, styles: c, viewer, tutor, voice, voiceOk, doc
         </details>
 
         <div className={c.bd}>
-          <span className={`${c.badge} ${c[info.tone]}`}>{info.icon} {info.label}</span>
+          <span className={`${c.badge} ${c[info.tone]}`} data-testid="decision" data-decision={res.decision}>{info.icon} {info.label}</span>
           <span className={`${c.badge} ${c.cf}`}>tin cậy {Math.round(res.confidence * 100)}%</span>
           {res.core_used === 'mock-fallback' && (
             <span className={`${c.badge} ${c.mute}`} title={res.degraded_reason ?? ''}>nhân mock (hạ cấp)</span>
@@ -134,7 +139,7 @@ export function Answer({ res, req, styles: c, viewer, tutor, voice, voiceOk, doc
         {!!res.citations?.length && (
           <div className={c.cts}>
             {res.citations.map((ct, i) => (
-              <button key={i} className={c.ct} title={ct.quote} onClick={() => viewer.highlight(ct.page, ct.quote)}>
+              <button key={i} className={c.ct} data-testid="citation" title={ct.quote} onClick={() => viewer.highlight(ct.page, ct.quote)}>
                 Trang {ct.ref} <q>{ct.quote.slice(0, 38)}…</q>
               </button>
             ))}
@@ -175,7 +180,7 @@ export function Answer({ res, req, styles: c, viewer, tutor, voice, voiceOk, doc
       {!folded && !!chips.length && (
         <div className={c.fus}>
           {chips.map((f, i) => f.kind === 'action' ? (
-            <button key={i} className={`${c.fu} ${c.fuAct}`} data-action={f.action} title={f.hint}
+            <button key={i} className={`${c.fu} ${c.fuAct}`} data-testid={`action-${f.action}`} data-action={f.action} title={f.hint}
                     onClick={() => handlers[f.action!]()}>{f.label}</button>
           ) : (
             <button key={i} className={c.fu} title={f.hint} onClick={() => onAsk(f.label)}>{f.label}</button>
@@ -188,7 +193,8 @@ export function Answer({ res, req, styles: c, viewer, tutor, voice, voiceOk, doc
       {extra && (
         <div style={{ marginTop: 10, paddingLeft: 10, borderLeft: '2px solid var(--warn)' }}>
           <Answer res={extra} req={req} styles={c} viewer={viewer} tutor={tutor} voice={voice}
-                  voiceOk={voiceOk} docName={docName} toast={toast} onAsk={onAsk} onFill={onFill} />
+                  voiceOk={voiceOk} docName={docName} toast={toast} onAsk={onAsk} onFill={onFill}
+                  traceOpen={traceOpen} />
         </div>
       )}
     </>

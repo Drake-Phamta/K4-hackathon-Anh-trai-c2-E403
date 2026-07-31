@@ -19,17 +19,17 @@
    đi tìm /console/vendor/... và 404 — worker chết im lặng, pdf.js rơi về
    "fake worker" chạy trên main thread và cuộn bắt đầu giật.
    File nằm ở web/public/ nên phục vụ tại gốc. */
-import * as pdfjsLib from 'pdfjs-dist';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 const KEEP = 2;                     // số trang giữ render mỗi bên khung nhìn
 
-export function createViewer({ container, onPage, onSelection, onReady, gap = 18 }){
+export function createViewer({ container, onPage, onSelection, onReady, onPageRendered, gap = 18 }){
   let doc = null, total = 0, scale = 1, fit = 1, current = 1;
   let pages = [];                   // [{page, text}]
   let slots = [];                   // phần tử .pv-page theo thứ tự trang
   const rendered = new Map();       // page -> {task}
-  let io = null, raf = 0;
+  let io = null, raf = 0, scrollHost = null, destroyed = false;
   /* Trang đích của goTo() đang cuộn mượt tới. Khác null = đừng tin trang mà
      IntersectionObserver báo, vì đó là trang đang bay qua giữa đường. */
   let pendingGoTo = null, pendingTimer = 0;
@@ -38,7 +38,7 @@ export function createViewer({ container, onPage, onSelection, onReady, gap = 18
 
   /* ── nạp ───────────────────────────────────────────────────────────── */
   async function load(data, name){
-    destroyLayers();
+    resetLayers();
     doc = await pdfjsLib.getDocument({ data }).promise;
     total = doc.numPages;
     current = 1;
@@ -99,7 +99,7 @@ export function createViewer({ container, onPage, onSelection, onReady, gap = 18
     if (rendered.has(p) || !doc) return;
     const slot = slots[p - 1];
     if (!slot) return;
-    rendered.set(p, {});
+    rendered.set(p, { task: null });
 
     const page = await doc.getPage(p);
     const viewport = page.getViewport({ scale });
@@ -125,23 +125,29 @@ export function createViewer({ container, onPage, onSelection, onReady, gap = 18
     slot.append(tl);
 
     try{
-      await page.render({
+      const task = page.render({
         canvasContext: canvas.getContext('2d', { alpha: false }),
         viewport,
         transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null,
-      }).promise;
+      });
+      rendered.set(p, { task });
+      await task.promise;
+      if (destroyed) return;
       await new pdfjsLib.TextLayer({
         textContentSource: await page.getTextContent(),
         container: tl, viewport,
       }).render();
       slot.classList.add('pv-ready');
+      onPageRendered?.(p);
     }catch(err){
       if (err?.name !== 'RenderingCancelledException') console.error('render trang', p, err);
     }
   }
 
   function unrender(p){
-    if (!rendered.has(p)) return;
+    const rec = rendered.get(p);
+    if (!rec) return;
+    try{ rec.task?.cancel(); }catch{}
     rendered.delete(p);
     const slot = slots[p - 1];
     if (!slot) return;
@@ -153,6 +159,7 @@ export function createViewer({ container, onPage, onSelection, onReady, gap = 18
   /* ── theo dõi khung nhìn ───────────────────────────────────────────── */
   function observe(){
     io?.disconnect();
+    scrollHost?.removeEventListener('scroll', onScroll);
     io = new IntersectionObserver(entries => {
       for (const e of entries){
         const p = +e.target.dataset.page;
@@ -161,7 +168,8 @@ export function createViewer({ container, onPage, onSelection, onReady, gap = 18
       sweep();
     }, { root: container.closest('.pv-scroll') ?? null, rootMargin: '150% 0px' });
     slots.forEach(s => io.observe(s));
-    (container.closest('.pv-scroll') ?? container).addEventListener('scroll', onScroll, { passive: true });
+    scrollHost = container.closest('.pv-scroll') ?? container;
+    scrollHost.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
   }
 
@@ -271,7 +279,7 @@ export function createViewer({ container, onPage, onSelection, onReady, gap = 18
   }
 
   /* ── bôi đen ───────────────────────────────────────────────────────── */
-  container.addEventListener('mouseup', () => setTimeout(() => {
+  const onMouseUp = () => setTimeout(() => {
     const sel = window.getSelection();
     const text = sel && !sel.isCollapsed ? sel.toString().replace(/\s+/g, ' ').trim() : '';
     if (text.length < 2){ onSelection?.(null); return; }
@@ -281,7 +289,8 @@ export function createViewer({ container, onPage, onSelection, onReady, gap = 18
     let rect = null;
     try{ rect = sel.getRangeAt(0).getBoundingClientRect(); }catch{}
     onSelection?.({ text, page, rect });
-  }, 10));
+  }, 10);
+  container.addEventListener('mouseup', onMouseUp);
 
   /* ── tô đoạn được trích ────────────────────────────────────────────── */
   const deacc = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').toLowerCase();
@@ -318,14 +327,29 @@ export function createViewer({ container, onPage, onSelection, onReady, gap = 18
     return { page: r, hit: h ?? null };
   }
 
-  function destroyLayers(){
+  function resetLayers(){
     io?.disconnect();
+    for (const p of [...rendered.keys()]) unrender(p);
     rendered.clear();
     container.replaceChildren();
   }
 
+  function destroy(){
+    if (destroyed) return;
+    destroyed = true;
+    clearTimeout(pendingTimer);
+    cancelAnimationFrame(raf);
+    io?.disconnect();
+    scrollHost?.removeEventListener('scroll', onScroll);
+    container.removeEventListener('mouseup', onMouseUp);
+    resetLayers();
+    container.classList.remove('pv-root');
+    doc?.destroy?.();
+    doc = null;
+  }
+
   return {
-    load, goTo, settled, highlight, setZoom, fitWidth, anchorOf,
+    load, goTo, settled, highlight, setZoom, fitWidth, anchorOf, destroy,
     get total(){ return total; },
     get page(){ return current; },
     get pages(){ return pages; },
